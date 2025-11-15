@@ -8,117 +8,143 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 248 100% 99%;
-    --foreground: 234 47% 25%;
+    /* NETIA Brand Colors - #007BFF (Azul Netia) */
+    --netia-blue: 211 100% 50%;
+    --netia-orange: 18 100% 61%; /* #FF6F3C */
+    
+    /* Backgrounds */
+    --netia-bg-light: 216 33% 97%; /* #F5F7FA */
+    --netia-bg-lighter: 0 0% 98%; /* #FAFAFA */
+    
+    /* Text Colors */
+    --netia-text-primary: 0 0% 23%; /* #3A3A3A */
+    --netia-text-secondary: 0 0% 36%; /* #5C5C5C */
+    --netia-text-disabled: 0 0% 63%; /* #A0A0A0 */
+    
+    /* Avatar Colors */
+    --avatar-tino: 211 100% 35%; /* #0056B3 - TINO azul oscuro */
+    --avatar-zahia: 162 100% 39%; /* #00C896 - ZAHIA verde */
+    --avatar-roma: 257 89% 62%; /* #7A5AF5 - ROMA púrpura */
 
-    --card: 0 0% 100%;
-    --card-foreground: 234 47% 25%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 234 47% 25%;
-
-    --primary: 262 83% 58%;
+    /* Primary mapped to NETIA Blue */
+    --primary: 211 100% 50%; /* #007BFF */
     --primary-foreground: 0 0% 100%;
     
-    --primary-gradient-start: 262 83% 58%;
-    --primary-gradient-end: 221 83% 53%;
+    /* Secondary mapped to NETIA Orange */
+    --secondary: 18 100% 61%; /* #FF6F3C */
+    --secondary-foreground: 0 0% 100%;
 
-    --secondary: 234 25% 94%;
-    --secondary-foreground: 234 47% 25%;
+    /* Background colors */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 0 0% 23%; /* #3A3A3A */
 
-    --muted: 234 25% 94%;
-    --muted-foreground: 234 16% 50%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 23%;
 
-    --accent: 262 83% 58%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 23%;
+
+    --muted: 216 33% 97%; /* #F5F7FA */
+    --muted-foreground: 0 0% 36%; /* #5C5C5C */
+
+    --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
     
-    --success: 158 64% 52%;
+    --success: 162 100% 39%;
     --warning: 38 92% 50%;
     --danger: 339 90% 51%;
 
     --destructive: 339 90% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 234 25% 90%;
-    --input: 234 25% 90%;
-    --ring: 262 83% 58%;
+    --border: 216 33% 90%;
+    --input: 216 33% 90%;
+    --ring: 211 100% 50%;
 
     --radius: 1rem;
     
-    --gradient-purple-blue: linear-gradient(135deg, hsl(262 83% 58%), hsl(221 83% 53%));
-    --gradient-teal: linear-gradient(135deg, hsl(158 64% 52%), hsl(172 66% 50%));
-    --gradient-orange: linear-gradient(135deg, hsl(38 92% 50%), hsl(25 95% 53%));
-    --gradient-pink: linear-gradient(135deg, hsl(339 90% 51%), hsl(330 81% 60%));
+    /* Gradients */
+    --gradient-netia: linear-gradient(135deg, hsl(211 100% 50%), hsl(18 100% 61%));
+    --gradient-tino: linear-gradient(135deg, hsl(211 100% 35%), hsl(211 100% 50%));
+    --gradient-zahia: linear-gradient(135deg, hsl(162 100% 39%), hsl(162 100% 50%));
+    --gradient-roma: linear-gradient(135deg, hsl(257 89% 62%), hsl(280 89% 70%));
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 23%;
+    --sidebar-primary: 211 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 33% 97%;
+    --sidebar-accent-foreground: 0 0% 23%;
+    --sidebar-border: 216 33% 90%;
+    --sidebar-ring: 211 100% 50%;
   }
 
   .dark {
-    --background: 234 47% 10%;
+    --background: 0 0% 10%;
     --foreground: 0 0% 98%;
 
-    --card: 234 37% 12%;
+    --card: 0 0% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 234 37% 12%;
+    --popover: 0 0% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 262 83% 58%;
+    --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 234 37% 16%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 18 100% 61%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 234 37% 16%;
-    --muted-foreground: 234 20% 65%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 262 83% 58%;
+    --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 339 90% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 234 37% 20%;
-    --input: 234 37% 20%;
-    --ring: 262 83% 58%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 211 100% 50%;
+    
+    --netia-text-primary: 0 0% 98%;
+    --netia-text-secondary: 0 0% 75%;
+    --netia-text-disabled: 0 0% 50%;
   }
 }
 
 @layer utilities {
-  .gradient-purple-blue {
-    background: linear-gradient(135deg, hsl(262 83% 58%), hsl(221 83% 53%));
+  /* NETIA Gradients */
+  .gradient-netia {
+    background: linear-gradient(135deg, hsl(211 100% 50%), hsl(18 100% 61%));
   }
   
-  .gradient-teal {
-    background: linear-gradient(135deg, hsl(158 64% 52%), hsl(172 66% 50%));
+  .gradient-tino {
+    background: linear-gradient(135deg, hsl(211 100% 35%), hsl(211 100% 50%));
   }
   
-  .gradient-orange {
-    background: linear-gradient(135deg, hsl(38 92% 50%), hsl(25 95% 53%));
+  .gradient-zahia {
+    background: linear-gradient(135deg, hsl(162 100% 39%), hsl(162 100% 50%));
   }
   
-  .gradient-pink {
-    background: linear-gradient(135deg, hsl(339 90% 51%), hsl(330 81% 60%));
+  .gradient-roma {
+    background: linear-gradient(135deg, hsl(257 89% 62%), hsl(280 89% 70%));
   }
   
+  /* Glassmorphism Effects */
   .glass {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   @keyframes float {
@@ -144,5 +170,10 @@ All colors MUST be HSL.
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
+  }
+  
+  /* AI Chat Messages */
+  .ai-message {
+    font-family: 'Nunito Sans', sans-serif;
   }
 }
