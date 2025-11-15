@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import Training from "./pages/Training";
 import Chat from "./pages/Chat";
+import Leaderboard from "./pages/Leaderboard";
 
 // Club pages
 import ClubDashboard from "./pages/club/ClubDashboard";
@@ -152,6 +153,16 @@ const App = () => (
               element={
                 <RouteGuard allowedRoles={['admin']}>
                   <Settings />
+                </RouteGuard>
+              }
+            />
+
+            {/* Leaderboard */}
+            <Route
+              path="/leaderboard"
+              element={
+                <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
+                  <Leaderboard />
                 </RouteGuard>
               }
             />
