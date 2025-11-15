@@ -216,8 +216,8 @@ export function MessageDock({
   const isExpanded = expandedCharacter !== null;
 
   const positionClasses = position === "top" 
-    ? "fixed top-6 left-1/2 -translate-x-1/2 z-50"
-    : "fixed bottom-6 left-1/2 -translate-x-1/2 z-50";
+    ? "fixed top-6 left-1/2 -translate-x-1/2 z-50 px-2 sm:px-0"
+    : "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-2 sm:px-0";
 
   return (
     <motion.div
@@ -228,9 +228,9 @@ export function MessageDock({
       variants={enableAnimations ? containerVariants : {}}
     >
       <motion.div
-        className="rounded-full px-4 py-2 shadow-2xl border border-gray-200/50"
+        className="rounded-full px-2 sm:px-4 py-2 shadow-2xl border border-gray-200/50"
         animate={{
-          width: isExpanded ? expandedWidth : collapsedWidth,
+          width: isExpanded ? Math.min(expandedWidth, typeof window !== 'undefined' ? window.innerWidth - 32 : expandedWidth) : collapsedWidth,
           background: isExpanded && selectedCharacter
             ? `linear-gradient(to right, ${getGradientColors(selectedCharacter)})`
             : theme === "dark" ? "#1f2937" : "#ffffff",

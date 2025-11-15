@@ -49,28 +49,65 @@ const Chat = () => {
 
   return (
     <AppLayout>
-      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center">
-        <div className="text-center mb-12 space-y-4">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-foreground">
+      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center px-4">
+        <div className="text-center mb-8 md:mb-12 space-y-3 md:space-y-4 max-w-4xl mx-auto w-full">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-foreground px-4">
             Chat con Avatares IA
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
             Consulta con TINO, ZAHIA y ROMA para obtener recomendaciones personalizadas sobre entrenamiento, nutrición y técnica.
           </p>
         </div>
 
-        <MessageDock 
-          characters={netiaCharacters}
-          onMessageSend={handleMessageSend}
-          onCharacterSelect={handleCharacterSelect}
-          onDockToggle={handleDockToggle}
-          expandedWidth={500}
-          placeholder={(name) => `Escribe tu consulta a ${name}...`}
-          theme="light"
-          enableAnimations={true}
-          closeOnSend={false}
-          autoFocus={true}
-        />
+        {/* Wrapper for MessageDock with mobile optimization */}
+        <div className="w-full flex justify-center items-center">
+          <MessageDock 
+            characters={netiaCharacters}
+            onMessageSend={handleMessageSend}
+            onCharacterSelect={handleCharacterSelect}
+            onDockToggle={handleDockToggle}
+            expandedWidth={500}
+            placeholder={(name) => `Escribe tu consulta a ${name}...`}
+            theme="light"
+            enableAnimations={true}
+            closeOnSend={false}
+            autoFocus={true}
+            className="w-full max-w-[calc(100vw-2rem)] sm:max-w-none"
+          />
+        </div>
+
+        {/* Info cards about avatars - mobile optimized */}
+        <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto w-full px-4">
+          <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-tino/50 transition-all">
+            <div className="flex items-center gap-3 mb-3">
+              <img src={tinoAvatar} alt="TINO" className="w-12 h-12 rounded-full object-cover" />
+              <h3 className="font-heading text-lg md:text-xl font-bold text-tino">TINO</h3>
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Especialista en entrenamiento físico y preparación atlética para veleristas.
+            </p>
+          </div>
+
+          <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-zahia/50 transition-all">
+            <div className="flex items-center gap-3 mb-3">
+              <img src={zahiaAvatar} alt="ZAHIA" className="w-12 h-12 rounded-full object-cover" />
+              <h3 className="font-heading text-lg md:text-xl font-bold text-zahia">ZAHIA</h3>
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Experta en técnica de navegación, maniobras y optimización del rendimiento en el agua.
+            </p>
+          </div>
+
+          <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-roma/50 transition-all sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-3 mb-3">
+              <img src={romaAvatar} alt="ROMA" className="w-12 h-12 rounded-full object-cover" />
+              <h3 className="font-heading text-lg md:text-xl font-bold text-roma">ROMA</h3>
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Estratega de regatas, análisis táctico y planificación de competencias.
+            </p>
+          </div>
+        </div>
       </div>
     </AppLayout>
   );
