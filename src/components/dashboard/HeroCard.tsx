@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { AvatarScene } from '@/components/avatars/AvatarScene';
+import { AvatarType } from '@/components/avatars/FloatingAvatar';
 
 interface HeroCardProps {
   userName: string;
   welcomeMessage: string;
+  avatarType?: AvatarType;
   badge?: {
     icon?: React.ReactNode;
     label: string;
@@ -11,7 +14,7 @@ interface HeroCardProps {
   };
 }
 
-export const HeroCard = ({ userName, welcomeMessage, badge }: HeroCardProps) => {
+export const HeroCard = ({ userName, welcomeMessage, avatarType = 'TINO', badge }: HeroCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -88,24 +91,18 @@ export const HeroCard = ({ userName, welcomeMessage, badge }: HeroCardProps) => 
         )}
       </div>
 
-      {/* 3D Character Placeholder */}
+      {/* 3D Avatar */}
       <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5, duration: 0.6 }}
-        className="absolute right-0 bottom-0 w-80 h-80"
+        className="absolute right-0 bottom-0 w-80 h-80 pointer-events-auto"
       >
-        <div className="relative w-full h-full">
-          {/* Placeholder circle - will be replaced with 3D model */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-64 h-64 rounded-full bg-gradient-to-br from-white/20 to-transparent backdrop-blur-sm border border-white/30 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl mb-2 animate-float">👨‍🚀</div>
-                <p className="text-white/60 text-sm font-medium">Avatar 3D</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AvatarScene
+          avatarType={avatarType}
+          showParticles={true}
+          enableControls={false}
+        />
       </motion.div>
     </motion.div>
   );

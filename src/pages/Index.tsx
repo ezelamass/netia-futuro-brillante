@@ -50,6 +50,7 @@ const Index = () => {
             <HeroCard
               userName="Umar"
               welcomeMessage="Qué bueno tenerte de vuelta"
+              avatarType="TINO"
               badge={{
                 icon: <Beaker className="w-7 h-7 text-white" />,
                 label: 'Predicado',
