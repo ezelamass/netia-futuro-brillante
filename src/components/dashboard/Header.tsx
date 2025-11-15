@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { toast } from 'sonner';
 
 export const Header = () => {
@@ -36,13 +35,10 @@ export const Header = () => {
   return (
     <header className="h-16 bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-30 px-4 lg:px-8">
       <div className="h-full flex items-center justify-between">
-        {/* Left: Sidebar toggle + Welcome message */}
-        <div className="flex items-center gap-3">
-          <SidebarTrigger className="hidden lg:flex" />
-          <div className="hidden lg:block">
-            <h2 className="text-lg font-semibold">¡Hola, {user?.name}!</h2>
-            <p className="text-sm text-muted-foreground">Listo para entrenar hoy</p>
-          </div>
+        {/* Left: Welcome message (desktop only) */}
+        <div className="hidden lg:block">
+          <h2 className="text-lg font-semibold">¡Hola, {user?.name}!</h2>
+          <p className="text-sm text-muted-foreground">Listo para entrenar hoy</p>
         </div>
 
         {/* Mobile: Logo */}

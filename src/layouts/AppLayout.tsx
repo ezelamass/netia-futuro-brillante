@@ -11,7 +11,7 @@ interface AppLayoutProps {
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen bg-gradient-to-br from-background via-purple-50/30 to-blue-50/30 flex w-full">
         {/* Desktop Sidebar */}
         <Sidebar />
