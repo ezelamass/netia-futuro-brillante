@@ -1,10 +1,40 @@
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { Header } from '@/components/dashboard/Header';
-import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
-import { SkillCard } from '@/components/dashboard/SkillCard';
-import { ProgressCard } from '@/components/dashboard/ProgressCard';
-import { ActivityChart } from '@/components/dashboard/ActivityChart';
-import { BookOpen, Lightbulb, Brain } from 'lucide-react';
+import { HeroCard } from '@/components/dashboard/HeroCard';
+import { MetricCard } from '@/components/dashboard/MetricCard';
+import { QuickActionBar } from '@/components/dashboard/QuickActionBar';
+import { ActivityCard } from '@/components/dashboard/ActivityCard';
+import { BookOpen, Lightbulb, Brain, Beaker } from 'lucide-react';
+
+const chartData = [
+  { month: 'Ene', series1: 50, series2: 30 },
+  { month: 'Feb', series1: 45, series2: 40 },
+  { month: 'Mar', series1: 60, series2: 45 },
+  { month: 'Abr', series1: 75, series2: 55 },
+  { month: 'May', series1: 55, series2: 50 },
+  { month: 'Jun', series1: 65, series2: 45 },
+];
+
+const quickActions = [
+  {
+    icon: BookOpen,
+    title: 'Nivel de Disciplina',
+    rating: 5,
+    gradient: 'purple',
+  },
+  {
+    icon: Brain,
+    title: 'Pensamiento Crítico',
+    rating: 4,
+    gradient: 'pink',
+  },
+  {
+    icon: Lightbulb,
+    title: 'Resolución de Problemas',
+    rating: 4,
+    gradient: 'teal',
+  },
+];
 
 const Index = () => {
   return (
@@ -14,17 +44,27 @@ const Index = () => {
       <main className="ml-20 p-8">
         <Header />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Hero Card */}
           <div className="lg:col-span-2">
-            <WelcomeCard />
+            <HeroCard
+              userName="Umar"
+              welcomeMessage="Qué bueno tenerte de vuelta"
+              badge={{
+                icon: <Beaker className="w-7 h-7 text-white" />,
+                label: 'Predicado',
+                title: 'Científico Boy',
+              }}
+            />
           </div>
           
+          {/* Homework Section */}
           <div className="bg-white rounded-3xl p-6 shadow-lg">
-            <h3 className="font-display font-bold text-xl text-foreground mb-4">
+            <h3 className="font-display font-bold text-xl text-foreground mb-5">
               Tus tareas
             </h3>
             <div className="space-y-4">
-              <ProgressCard
+              <MetricCard
                 subject="Matemáticas"
                 topic="Práctica de Conteo 1"
                 progress={70}
@@ -32,7 +72,7 @@ const Index = () => {
                 color="teal"
                 delay={0.1}
               />
-              <ProgressCard
+              <MetricCard
                 subject="Arte"
                 topic="Práctica de Colorear 2"
                 progress={60}
@@ -40,7 +80,7 @@ const Index = () => {
                 color="purple"
                 delay={0.2}
               />
-              <ProgressCard
+              <MetricCard
                 subject="Química"
                 topic="Introducción de elementos"
                 progress={43}
@@ -48,7 +88,7 @@ const Index = () => {
                 color="orange"
                 delay={0.3}
               />
-              <ProgressCard
+              <MetricCard
                 subject="Biología"
                 topic="Introducción del cuerpo"
                 progress={50}
@@ -60,31 +100,17 @@ const Index = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <SkillCard
-            icon={BookOpen}
-            title="Nivel de Disciplina"
-            rating={5}
-            iconBg="bg-primary"
-            delay={0.1}
-          />
-          <SkillCard
-            icon={Brain}
-            title="Pensamiento Crítico"
-            rating={4}
-            iconBg="gradient-pink"
-            delay={0.2}
-          />
-          <SkillCard
-            icon={Lightbulb}
-            title="Resolución de Problemas"
-            rating={4}
-            iconBg="gradient-teal"
-            delay={0.3}
-          />
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <QuickActionBar actions={quickActions} delay={0.2} />
         </div>
         
-        <ActivityChart />
+        {/* Activity Chart */}
+        <ActivityCard
+          title="Actividad de Aprendizaje"
+          data={chartData}
+          delay={0.4}
+        />
       </main>
     </div>
   );
