@@ -48,11 +48,9 @@ export const Sidebar = () => {
     <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-background/95 backdrop-blur-lg border-r border-border flex-col z-40">
       {/* Logo */}
       <div className="h-16 flex items-center gap-3 px-6 border-b border-border">
-        <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
-          <Waves className="w-6 h-6 text-white" />
-        </div>
+        <img src="/logo.png" alt="NETIA" className="w-10 h-10 rounded-lg" />
         <div>
-          <h1 className="text-xl font-bold">NETIA</h1>
+          <h1 className="text-xl font-bold font-heading">NETIA</h1>
           <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
         </div>
       </div>

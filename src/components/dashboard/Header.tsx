@@ -43,10 +43,8 @@ export const Header = () => {
 
         {/* Mobile: Logo */}
         <div className="lg:hidden flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">N</span>
-          </div>
-          <span className="font-bold">NETIA</span>
+          <img src="/logo.png" alt="NETIA" className="w-8 h-8 rounded-lg" />
+          <span className="font-bold font-heading">NETIA</span>
         </div>
 
         {/* Right: Notifications + Profile */}

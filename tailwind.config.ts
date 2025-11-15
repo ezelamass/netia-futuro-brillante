@@ -50,10 +50,27 @@ export default {
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         danger: "hsl(var(--danger))",
+        // NETIA Brand Colors
+        netia: {
+          blue: "hsl(var(--netia-blue))",
+          orange: "hsl(var(--netia-orange))",
+          'bg-light': "hsl(var(--netia-bg-light))",
+          'bg-lighter': "hsl(var(--netia-bg-lighter))",
+          'text-primary': "hsl(var(--netia-text-primary))",
+          'text-secondary': "hsl(var(--netia-text-secondary))",
+          'text-disabled': "hsl(var(--netia-text-disabled))",
+        },
+        // Avatar Colors
+        avatar: {
+          tino: "hsl(var(--avatar-tino))",
+          zahia: "hsl(var(--avatar-zahia))",
+          roma: "hsl(var(--avatar-roma))",
+        },
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Poppins', 'sans-serif'],
+        heading: ['Poppins', 'sans-serif'],
+        ai: ['Nunito Sans', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

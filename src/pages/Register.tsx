@@ -31,14 +31,12 @@ const Register = () => {
   return (
     <PageTransition>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center">
-                <Waves className="w-8 h-8 text-white" />
-              </div>
+              <img src="/logo.png" alt="NETIA" className="w-16 h-16 rounded-xl" />
             </div>
-            <CardTitle className="text-3xl">NETIA</CardTitle>
+            <CardTitle className="text-3xl font-heading">NETIA</CardTitle>
             <CardDescription>Crea tu cuenta</CardDescription>
           </CardHeader>
           <CardContent>

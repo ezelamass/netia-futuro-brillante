@@ -21,10 +21,8 @@ const LandingPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
-              <Waves className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold">NETIA</span>
+            <img src="/logo.png" alt="NETIA" className="w-10 h-10 rounded-lg" />
+            <span className="text-2xl font-bold font-heading">NETIA</span>
           </div>
           <div className="flex gap-4">
             <Link to="/login">
