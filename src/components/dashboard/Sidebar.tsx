@@ -1,7 +1,17 @@
-import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, Settings, Waves } from 'lucide-react';
+import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
+import {
+  Sidebar as SidebarUI,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '@/components/ui/sidebar';
 
 const studentNav = [
   { label: 'Inicio', icon: Home, href: '/dashboard' },
@@ -27,6 +37,7 @@ const adminNav = [
 
 export const Sidebar = () => {
   const { user, hasRole } = useAuth();
+  const { open } = useSidebar();
 
   const getNavigationItems = () => {
     const items = [...studentNav];
@@ -45,39 +56,99 @@ export const Sidebar = () => {
   const navItems = getNavigationItems();
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-background/95 backdrop-blur-lg border-r border-border flex-col z-40">
-      {/* Logo */}
-      <div className="h-16 flex items-center gap-3 px-6 border-b border-border">
-        <img src="/logo.png" alt="NETIA" className="w-10 h-10 rounded-lg" />
-        <div>
-          <h1 className="text-xl font-bold font-heading">NETIA</h1>
-          <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+    <SidebarUI className="hidden lg:flex border-r border-border" collapsible="icon">
+      <SidebarContent className="bg-background/95 backdrop-blur-lg">
+        {/* Logo */}
+        <div className="h-16 flex items-center gap-3 px-4 border-b border-border">
+          <img src="/logo.png" alt="NETIA" className="w-10 h-10 rounded-lg shrink-0" />
+          {open && (
+            <div>
+              <h1 className="text-xl font-bold font-heading">NETIA</h1>
+              <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-6 px-3">
-        <div className="space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-primary/10"
-              activeClassName="bg-primary/10 text-primary font-medium"
-            >
-              <div className="relative">
-                <item.icon className="w-5 h-5" />
-                {item.badge && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-semibold">
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </div>
-      </nav>
-    </aside>
+        {/* Student Navigation */}
+        <SidebarGroup>
+          {open && <SidebarGroupLabel>Navegación</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {studentNav.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild tooltip={item.label}>
+                    <NavLink
+                      to={item.href}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-primary/10"
+                      activeClassName="bg-primary/10 text-primary font-medium"
+                    >
+                      <div className="relative">
+                        <item.icon className="w-5 h-5" />
+                        {item.badge && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-semibold">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      {open && <span>{item.label}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Club Navigation */}
+        {hasRole(['coach', 'admin']) && (
+          <SidebarGroup>
+            {open && <SidebarGroupLabel>Club</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {clubNav.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild tooltip={item.label}>
+                      <NavLink
+                        to={item.href}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-primary/10"
+                        activeClassName="bg-primary/10 text-primary font-medium"
+                      >
+                        <item.icon className="w-5 h-5" />
+                        {open && <span>{item.label}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Admin Navigation */}
+        {hasRole('admin') && (
+          <SidebarGroup>
+            {open && <SidebarGroupLabel>Administración</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminNav.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild tooltip={item.label}>
+                      <NavLink
+                        to={item.href}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-primary/10"
+                        activeClassName="bg-primary/10 text-primary font-medium"
+                      >
+                        <item.icon className="w-5 h-5" />
+                        {open && <span>{item.label}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </SidebarContent>
+    </SidebarUI>
   );
 };
