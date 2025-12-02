@@ -1,5 +1,6 @@
 import { AppLayout } from '@/layouts/AppLayout';
 import { MessageDock, Character } from '@/components/ui/message-dock';
+import { motion } from 'framer-motion';
 import tinoAvatar from '@/assets/tino-avatar.avif';
 import zahiaAvatar from '@/assets/zahia-avatar.avif';
 import romaAvatar from '@/assets/roma-avatar.avif';
@@ -47,6 +48,37 @@ const Chat = () => {
     console.log("Chat expandido:", isExpanded);
   };
 
+  // Animations variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.3,
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 30,
+      scale: 0.9
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: "spring" as const,
+        stiffness: 100,
+        damping: 15,
+        duration: 0.6
+      }
+    }
+  };
+
   return (
     <AppLayout>
       <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center px-4">
@@ -76,9 +108,18 @@ const Chat = () => {
           />
         </div>
 
-        {/* Info cards about avatars - mobile optimized */}
-        <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto w-full px-4">
-          <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-tino/50 transition-all">
+        {/* Info cards about avatars - mobile optimized with staggered animations */}
+        <motion.div 
+          className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto w-full px-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div 
+            className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-tino/50 transition-all"
+            variants={cardVariants}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          >
             <div className="flex items-center gap-3 mb-3">
               <img src={romaAvatar} alt="TINO" className="w-12 h-12 rounded-full object-cover" />
               <h3 className="font-heading text-lg md:text-xl font-bold text-tino">TINO</h3>
@@ -86,9 +127,13 @@ const Chat = () => {
             <p className="text-sm md:text-base text-muted-foreground">
               Especialista en entrenamiento físico y preparación atlética para veleristas.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-zahia/50 transition-all">
+          <motion.div 
+            className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-zahia/50 transition-all"
+            variants={cardVariants}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          >
             <div className="flex items-center gap-3 mb-3">
               <img src={tinoAvatar} alt="ZAHIA" className="w-12 h-12 rounded-full object-cover" />
               <h3 className="font-heading text-lg md:text-xl font-bold text-zahia">ZAHIA</h3>
@@ -96,9 +141,13 @@ const Chat = () => {
             <p className="text-sm md:text-base text-muted-foreground">
               Experta en técnica de navegación, maniobras y optimización del rendimiento en el agua.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-roma/50 transition-all sm:col-span-2 lg:col-span-1">
+          <motion.div 
+            className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-roma/50 transition-all sm:col-span-2 lg:col-span-1"
+            variants={cardVariants}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          >
             <div className="flex items-center gap-3 mb-3">
               <img src={zahiaAvatar} alt="ROMA" className="w-12 h-12 rounded-full object-cover" />
               <h3 className="font-heading text-lg md:text-xl font-bold text-roma">ROMA</h3>
@@ -106,8 +155,8 @@ const Chat = () => {
             <p className="text-sm md:text-base text-muted-foreground">
               Estratega de regatas, análisis táctico y planificación de competencias.
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </AppLayout>
   );
