@@ -12,7 +12,7 @@ const netiaCharacters: Character[] = [
     online: true,
     backgroundColor: "bg-tino",
     gradientColors: "hsl(var(--tino)), hsl(var(--tino) / 0.3)",
-    avatar: tinoAvatar,
+    avatar: romaAvatar,
   },
   {
     name: "ZAHIA",
@@ -20,7 +20,7 @@ const netiaCharacters: Character[] = [
     online: true,
     backgroundColor: "bg-zahia",
     gradientColors: "hsl(var(--zahia)), hsl(var(--zahia) / 0.3)",
-    avatar: zahiaAvatar,
+    avatar: tinoAvatar,
   },
   {
     name: "ROMA",
@@ -28,7 +28,7 @@ const netiaCharacters: Character[] = [
     online: true,
     backgroundColor: "bg-roma",
     gradientColors: "hsl(var(--roma)), hsl(var(--roma) / 0.3)",
-    avatar: romaAvatar,
+    avatar: zahiaAvatar,
   },
   { emoji: "⚙️", name: "Settings", online: false },
 ];
@@ -80,7 +80,7 @@ const Chat = () => {
         <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto w-full px-4">
           <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-tino/50 transition-all">
             <div className="flex items-center gap-3 mb-3">
-              <img src={tinoAvatar} alt="TINO" className="w-12 h-12 rounded-full object-cover" />
+              <img src={romaAvatar} alt="TINO" className="w-12 h-12 rounded-full object-cover" />
               <h3 className="font-heading text-lg md:text-xl font-bold text-tino">TINO</h3>
             </div>
             <p className="text-sm md:text-base text-muted-foreground">
@@ -90,7 +90,7 @@ const Chat = () => {
 
           <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-zahia/50 transition-all">
             <div className="flex items-center gap-3 mb-3">
-              <img src={zahiaAvatar} alt="ZAHIA" className="w-12 h-12 rounded-full object-cover" />
+              <img src={tinoAvatar} alt="ZAHIA" className="w-12 h-12 rounded-full object-cover" />
               <h3 className="font-heading text-lg md:text-xl font-bold text-zahia">ZAHIA</h3>
             </div>
             <p className="text-sm md:text-base text-muted-foreground">
@@ -100,7 +100,7 @@ const Chat = () => {
 
           <div className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-roma/50 transition-all sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-3">
-              <img src={romaAvatar} alt="ROMA" className="w-12 h-12 rounded-full object-cover" />
+              <img src={zahiaAvatar} alt="ROMA" className="w-12 h-12 rounded-full object-cover" />
               <h3 className="font-heading text-lg md:text-xl font-bold text-roma">ROMA</h3>
             </div>
             <p className="text-sm md:text-base text-muted-foreground">
