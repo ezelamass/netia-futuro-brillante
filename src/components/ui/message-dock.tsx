@@ -302,86 +302,78 @@ export function MessageDock({
           />
 
           {/* Character buttons */}
-          {characters.slice(1, -1).map((character, index) => {
-            const actualIndex = index + 1;
-            const isSelected = expandedCharacter === actualIndex;
+          <div className="flex items-center gap-2">
+            {characters.slice(1, -1).map((character, index) => {
+              const actualIndex = index + 1;
+              const isSelected = expandedCharacter === actualIndex;
 
-            return (
-              <motion.div
-                key={character.name}
-                className={cn(
-                  "relative",
-                  isSelected && isExpanded && "absolute left-1 top-1 z-20"
-                )}
-                style={{
-                  // When selected and expanded, don't take up space in flex layout
-                  width: isSelected && isExpanded ? 0 : "auto",
-                  minWidth: isSelected && isExpanded ? 0 : "auto",
-                  overflow: "visible",
-                }}
-                animate={{
-                  opacity: isExpanded && !isSelected ? 0 : 1,
-                  y: isExpanded && !isSelected ? 60 : 0,
-                  scale: isExpanded && !isSelected ? 0.8 : 1,
-                  // Only use translateX for non-selected or non-expanded
-                  x: isSelected && isExpanded ? 0 : 0,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 30,
-                  delay:
-                    isExpanded && !isSelected
-                      ? index * 0.05
-                      : isExpanded
-                      ? 0.1
-                      : 0, // Remove delay when coming back - immediate return
-                }}
-              >
-                <motion.button
+              return (
+                <motion.div
+                  key={character.name}
                   className={cn(
-                    "relative w-10 h-10 rounded-full flex items-center justify-center text-xl cursor-pointer overflow-hidden",
-                    isSelected && isExpanded
-                      ? "bg-white/90"
-                      : character.backgroundColor
+                    "relative flex-shrink-0",
+                    isSelected && isExpanded && "absolute left-1 top-1 z-20"
                   )}
-                  onClick={() => handleCharacterClick(actualIndex)}
-                  whileHover={!isExpanded ? hoverAnimation : { scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label={`Message ${character.name}`}
+                  animate={{
+                    opacity: isExpanded && !isSelected ? 0 : 1,
+                    y: isExpanded && !isSelected ? 60 : 0,
+                    scale: isExpanded && !isSelected ? 0.8 : 1,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                    delay:
+                      isExpanded && !isSelected
+                        ? index * 0.05
+                        : 0,
+                  }}
                 >
-                  {character.avatar ? (
-                    <img 
-                      src={character.avatar} 
-                      alt={character.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-2xl">{character.emoji}</span>
-                  )}
+                  <motion.button
+                    className={cn(
+                      "relative w-10 h-10 rounded-full flex items-center justify-center text-xl cursor-pointer overflow-hidden",
+                      isSelected && isExpanded
+                        ? "bg-white/90"
+                        : character.backgroundColor
+                    )}
+                    onClick={() => handleCharacterClick(actualIndex)}
+                    whileHover={!isExpanded ? hoverAnimation : { scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label={`Message ${character.name}`}
+                  >
+                    {character.avatar ? (
+                      <img 
+                        src={character.avatar} 
+                        alt={character.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl">{character.emoji}</span>
+                    )}
 
-                  {/* Online indicator */}
-                  {character.online && (
-                    <motion.div
-                      className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: isExpanded && !isSelected ? 0 : 1 }}
-                      transition={{
-                        delay: isExpanded
-                          ? isSelected
-                            ? 0.3
-                            : 0
-                          : (index + 1) * 0.1 + 0.5,
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                </motion.button>
-              </motion.div>
-            );
-          })}
+                    {/* Online indicator */}
+                    {character.online && (
+                      <motion.div
+                        className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: isExpanded && !isSelected ? 0 : 1 }}
+                        transition={{
+                          delay: isExpanded
+                            ? isSelected
+                              ? 0.3
+                              : 0
+                            : (index + 1) * 0.1 + 0.5,
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                  </motion.button>
+                </motion.div>
+              );
+            })}
+          </div>
 
           {/* Text input - slides out from center */}
           <AnimatePresence>
