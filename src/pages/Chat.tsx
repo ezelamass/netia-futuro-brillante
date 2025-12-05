@@ -95,7 +95,7 @@ const Chat = () => {
   const [pendingAvatar, setPendingAvatar] = useState<AvatarId | null>(null);
 
   // Generar un conversationId por avatar para esta sesión
-  const [conversationIds] = useState<Record<AvatarId, string>>(() => ({
+  const [conversationIds, setConversationIds] = useState<Record<AvatarId, string>>(() => ({
     TINO: `TINO-${generateId()}`,
     ZAHIA: `ZAHIA-${generateId()}`,
     ROMA: `ROMA-${generateId()}`,
@@ -184,6 +184,23 @@ const Chat = () => {
     setHasStartedChat((prev) =>
       prev || Object.values(conversations).some((msgs) => msgs.length > 0)
     );
+  };
+
+  const handleResetAvatarChat = (avatar: AvatarId) => {
+    setConversations((prev) => {
+      const updated: ConversationState = {
+        ...prev,
+        [avatar]: [],
+      };
+      const hasAnyMessages = Object.values(updated).some((msgs) => msgs.length > 0);
+      setHasStartedChat(hasAnyMessages);
+      return updated;
+    });
+
+    setConversationIds((prev) => ({
+      ...prev,
+      [avatar]: `${avatar}-${generateId()}`,
+    }));
   };
 
   const handleSend = async (event: FormEvent) => {
@@ -372,6 +389,20 @@ const Chat = () => {
           <div className="flex h-full flex-col">
             {/* Área de mensajes */}
             <div className="flex-1 overflow-y-auto px-4 py-4">
+              {selectedAvatar && (
+                <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Conversación con {selectedAvatar}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleResetAvatarChat(selectedAvatar)}
+                    className="rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] font-medium text-foreground shadow-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={isSending && pendingAvatar === selectedAvatar}
+                  >
+                    Nuevo chat
+                  </button>
+                </div>
+              )}
+
               {renderPlaceholder()}
 
               {selectedAvatar && currentConversation.length > 0 && (
