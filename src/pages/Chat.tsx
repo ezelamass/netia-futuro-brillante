@@ -5,6 +5,16 @@ import tinoAvatar from '@/assets/tino-avatar.avif';
 import zahiaAvatar from '@/assets/zahia-avatar.avif';
 import romaAvatar from '@/assets/roma-avatar.avif';
 import { AvatarPill, AvatarId, AvatarPillAvatar } from '@/components/chat/AvatarPill';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ChatMessage {
   id: string;
@@ -93,6 +103,7 @@ const Chat = () => {
   const [isSending, setIsSending] = useState(false);
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<AvatarId | null>(null);
+  const [avatarToReset, setAvatarToReset] = useState<AvatarId | null>(null);
 
   // Generar un conversationId por avatar para esta sesión
   const [conversationIds, setConversationIds] = useState<Record<AvatarId, string>>(() => ({
@@ -201,6 +212,13 @@ const Chat = () => {
       ...prev,
       [avatar]: `${avatar}-${generateId()}`,
     }));
+  };
+
+  const handleConfirmReset = () => {
+    if (avatarToReset) {
+      handleResetAvatarChat(avatarToReset);
+    }
+    setAvatarToReset(null);
   };
 
   const handleSend = async (event: FormEvent) => {
@@ -394,7 +412,7 @@ const Chat = () => {
                   <span>Conversación con {selectedAvatar}</span>
                   <button
                     type="button"
-                    onClick={() => handleResetAvatarChat(selectedAvatar)}
+                    onClick={() => setAvatarToReset(selectedAvatar)}
                     className="rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] font-medium text-foreground shadow-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={isSending && pendingAvatar === selectedAvatar}
                   >
@@ -407,9 +425,10 @@ const Chat = () => {
 
               {selectedAvatar && currentConversation.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  {currentConversation.map((message) => {
+                  {currentConversation.map((message, index) => {
                     const isUser = message.sender === 'user';
                     const alignment = isUser ? 'justify-end' : 'justify-start';
+                    const isFirstUserMessage = isUser && index === 0;
 
                     return (
                       <div
@@ -430,7 +449,7 @@ const Chat = () => {
                             isUser
                               ? 'bg-primary text-primary-foreground'
                               : getAvatarBubbleClasses(message.avatar)
-                          }`}
+                          } ${isFirstUserMessage ? 'animate-enter' : ''}`}
                         >
                           <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
                         </div>
@@ -492,6 +511,32 @@ const Chat = () => {
             </div>
           </div>
         </main>
+
+        {/* Diálogo de confirmación para nuevo chat */}
+        <AlertDialog
+          open={avatarToReset !== null}
+          onOpenChange={(open) => {
+            if (!open) setAvatarToReset(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Empezar un nuevo chat?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esto borrará el historial de conversación con {avatarToReset ?? ''} en esta sesión.
+                Esta acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setAvatarToReset(null)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmReset}>
+                Nuevo chat
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Píldora de selección de avatares */}
         <AvatarPill
