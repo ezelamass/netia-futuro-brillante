@@ -299,20 +299,26 @@ const Chat = () => {
         return;
       }
 
-      setConversations((prev) => {
-        const existing = prev[avatarForThisMessage] ?? [];
-        const newMessages: ChatMessage[] = assistantMessages.map((textPart) => ({
-          id: generateId(),
-          sender: 'avatar',
-          avatar: avatarForThisMessage,
-          text: textPart,
-          timestamp: new Date().toISOString(),
-        }));
+      // Añadimos los mensajes del avatar de forma escalonada para simular que escribe varios mensajes seguidos
+      assistantMessages.forEach((textPart, index) => {
+        const delay = index * 450; // 450ms entre mensajes
+        setTimeout(() => {
+          setConversations((prev) => {
+            const existing = prev[avatarForThisMessage] ?? [];
+            const newMessage: ChatMessage = {
+              id: generateId(),
+              sender: 'avatar',
+              avatar: avatarForThisMessage,
+              text: textPart,
+              timestamp: new Date().toISOString(),
+            };
 
-        return {
-          ...prev,
-          [avatarForThisMessage]: [...existing, ...newMessages],
-        };
+            return {
+              ...prev,
+              [avatarForThisMessage]: [...existing, newMessage],
+            };
+          });
+        }, delay);
       });
     } catch (error) {
       console.error('Error al enviar mensaje al webhook:', error);
