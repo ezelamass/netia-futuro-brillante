@@ -94,24 +94,26 @@ const Chat = () => {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // IMPORTANTE: los archivos de imagen están cruzados, así que mapeamos manualmente
+  // para que cada avatar muestre su foto correcta.
   const avatarOptions: AvatarPillAvatar[] = useMemo(
     () => [
       {
         id: 'TINO',
         name: 'TINO',
-        image: tinoAvatar,
+        image: romaAvatar, // archivo de ROMA contiene la foto de TINO
         accentClass: 'ring-tino',
       },
       {
         id: 'ZAHIA',
         name: 'ZAHIA',
-        image: zahiaAvatar,
+        image: tinoAvatar, // archivo de TINO contiene la foto de ZAHIA
         accentClass: 'ring-zahia',
       },
       {
         id: 'ROMA',
         name: 'ROMA',
-        image: romaAvatar,
+        image: zahiaAvatar, // archivo de ZAHIA contiene la foto de ROMA
         accentClass: 'ring-roma',
       },
     ],
@@ -313,14 +315,15 @@ const Chat = () => {
   };
 
   const getAvatarImage = (avatar: AvatarId) => {
+    // Mismo mapeo cruzado que en avatarOptions para mantener consistencia
     switch (avatar) {
       case 'TINO':
-        return tinoAvatar;
+        return romaAvatar; // foto correcta de TINO
       case 'ZAHIA':
-        return zahiaAvatar;
+        return tinoAvatar; // foto correcta de ZAHIA
       case 'ROMA':
       default:
-        return romaAvatar;
+        return zahiaAvatar; // foto correcta de ROMA
     }
   };
 
