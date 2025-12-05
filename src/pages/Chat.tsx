@@ -61,9 +61,10 @@ function parseWebhookResponse(raw: string): string[] {
       for (const item of parsed) {
         if (item && typeof item === 'object') {
           const direct = (item as Record<string, unknown>)['output.respuesta'];
-          const value = typeof direct === 'string' && direct.trim()
-            ? direct
-            : Object.values(item as Record<string, unknown>)[0];
+          const value =
+            typeof direct === 'string' && direct.trim()
+              ? direct
+              : Object.values(item as Record<string, unknown>)[0];
 
           if (typeof value === 'string' && value.trim()) {
             messages.push(value.trim());
@@ -91,6 +92,7 @@ const Chat = () => {
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [hasStartedChat, setHasStartedChat] = useState(false);
+  const [pendingAvatar, setPendingAvatar] = useState<AvatarId | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -211,6 +213,7 @@ const Chat = () => {
     setInputValue('');
     setIsSending(true);
     setHasStartedChat(true);
+    setPendingAvatar(avatarForThisMessage);
 
     const webhookUrl = AVATAR_WEBHOOKS[avatarForThisMessage];
 
@@ -220,6 +223,7 @@ const Chat = () => {
         description: 'Este avatar aún no tiene un chat conectado.',
       });
       setIsSending(false);
+      setPendingAvatar(null);
       return;
     }
 
@@ -275,13 +279,14 @@ const Chat = () => {
       });
     } finally {
       setIsSending(false);
+      setPendingAvatar(null);
     }
   };
 
   const renderPlaceholder = () => {
     if (!hasStartedChat && !selectedAvatar) {
       return (
-        <div className="flex h-full flex-col items-center justify-center text-center px-4">
+        <div className="flex h-full flex-col items-center justify-center px-4 text-center">
           <p className="mb-2 text-sm font-medium uppercase tracking-wide text-primary">
             Chat IA con avatares
           </p>
@@ -342,15 +347,17 @@ const Chat = () => {
   return (
     <AppLayout>
       <div className="relative flex min-h-[calc(100vh-200px)] flex-col items-center justify-center px-4 pb-20">
-        <header className="mb-6 w-full max-w-4xl text-center">
-          <h1 className="px-4 text-3xl font-bold text-foreground sm:text-4xl md:text-5xl font-heading">
-            Chat con Avatares IA
-          </h1>
-          <p className="mx-auto mt-3 max-w-2xl px-4 text-base text-muted-foreground sm:text-lg">
-            Conversá de forma continua con TINO, ZAHIA y ROMA. Elegí un avatar abajo y mantené
-            un chat fluido con historial separado para cada uno.
-          </p>
-        </header>
+        {!hasStartedChat && (
+          <header className="mb-6 w-full max-w-4xl text-center">
+            <h1 className="font-heading px-4 text-3xl font-bold text-foreground sm:text-4xl md:text-5xl">
+              Chat con Avatares IA
+            </h1>
+            <p className="mx-auto mt-3 max-w-2xl px-4 text-base text-muted-foreground sm:text-lg">
+              Conversá de forma continua con TINO, ZAHIA y ROMA. Elegí un avatar abajo y mantené
+              un chat fluido con historial separado para cada uno.
+            </p>
+          </header>
+        )}
 
         <main className="glass relative w-full max-w-4xl flex-1 rounded-3xl border border-border/60 bg-background/80 p-0 shadow-lg backdrop-blur-xl">
           <div className="flex h-full flex-col">
@@ -390,13 +397,28 @@ const Chat = () => {
                       </div>
                     );
                   })}
+
+                  {/* Mensaje temporal de "pensando..." con shimmer plateado */}
+                  {isSending && pendingAvatar && pendingAvatar === selectedAvatar && (
+                    <div className="flex items-end gap-2 justify-start">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-background">
+                        <img
+                          src={getAvatarImage(pendingAvatar)}
+                          alt={`Avatar ${pendingAvatar}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="pulse max-w-[70%] rounded-2xl border border-border/40 bg-muted/70 px-3 py-2 text-xs text-muted-foreground shadow-sm">
+                        pensando...
+                      </div>
+                    </div>
+                  )}
+
                   <div ref={messagesEndRef} />
                 </div>
               )}
 
-              {!selectedAvatar && hasStartedChat && (
-                <div ref={messagesEndRef} />
-              )}
+              {!selectedAvatar && hasStartedChat && <div ref={messagesEndRef} />}
             </div>
 
             {/* Input de mensaje */}
