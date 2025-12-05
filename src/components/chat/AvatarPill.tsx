@@ -29,8 +29,8 @@ export const AvatarPill: FC<AvatarPillProps> = ({ avatars, selectedAvatar, onSel
               type="button"
               onClick={() => onSelect(avatar.id)}
               className={cn(
-                'relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-background/80 transition-all hover:shadow-md sm:h-14 sm:w-14',
-                isActive && 'ring-2 ring-offset-2 ring-offset-background',
+                'relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-background/80 transform transition-all duration-200 ease-out opacity-80 hover:opacity-100 hover:shadow-md hover:scale-105 sm:h-14 sm:w-14',
+                isActive && 'opacity-100 scale-105 shadow-lg ring-2 ring-offset-2 ring-offset-background',
                 isActive && (avatar.accentClass ?? 'ring-primary')
               )}
               aria-label={`Seleccionar avatar ${avatar.name}`}
