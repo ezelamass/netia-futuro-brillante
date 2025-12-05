@@ -1,70 +1,223 @@
 import { AppLayout } from '@/layouts/AppLayout';
-import { MessageDock, Character } from '@/components/ui/message-dock';
-import { motion } from 'framer-motion';
+import { useEffect, useMemo, useRef, useState, FormEvent } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import tinoAvatar from '@/assets/tino-avatar.avif';
 import zahiaAvatar from '@/assets/zahia-avatar.avif';
 import romaAvatar from '@/assets/roma-avatar.avif';
+import { AvatarPill, AvatarId, AvatarPillAvatar } from '@/components/chat/AvatarPill';
 
-const netiaCharacters: Character[] = [
-  { emoji: "✨", name: "NETIA", online: false },
-  {
-    name: "TINO",
-    emoji: "🏃",
-    online: true,
-    backgroundColor: "bg-tino",
-    gradientColors: "hsl(var(--tino)), hsl(var(--tino) / 0.3)",
-    avatar: romaAvatar,
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'avatar';
+  avatar: AvatarId;
+  text: string;
+  timestamp: string;
+}
+
+type ConversationState = Record<AvatarId, ChatMessage[]>;
+
+const AVATAR_WEBHOOKS: Record<AvatarId, string> = {
+  TINO: 'https://devwebhookn8n.ezequiellamas.com/webhook/8c5faf4e-a8c1-441b-be05-1f50464e1a4d',
+  ZAHIA: 'https://devwebhookn8n.ezequiellamas.com/webhook/795bd04f-9a82-4ac1-b7b4-691ede32286c',
+  ROMA: 'https://devwebhookn8n.ezequiellamas.com/webhook/cfe8b8a1-65b9-49de-bd4c-37881afe5c7f',
+};
+
+const STORAGE_KEY = 'netia_chat_state_v1';
+
+const EMPTY_CONVERSATIONS: ConversationState = {
+  TINO: [],
+  ZAHIA: [],
+  ROMA: [],
+};
+
+const AVATAR_CONFIG: Record<AvatarId, { description: string }> = {
+  TINO: {
+    description:
+      'TINO te acompaña con entrenamiento físico y preparación atlética para rendir al máximo.',
   },
-  {
-    name: "ZAHIA",
-    emoji: "🌊",
-    online: true,
-    backgroundColor: "bg-zahia",
-    gradientColors: "hsl(var(--zahia)), hsl(var(--zahia) / 0.3)",
-    avatar: tinoAvatar,
+  ZAHIA: {
+    description:
+      'ZAHIA es tu guía en nutrición, hidratación y hábitos saludables para deportistas.',
   },
-  {
-    name: "ROMA",
-    emoji: "🎯",
-    online: true,
-    backgroundColor: "bg-roma",
-    gradientColors: "hsl(var(--roma)), hsl(var(--roma) / 0.3)",
-    avatar: zahiaAvatar,
+  ROMA: {
+    description:
+      'ROMA te ayuda con estrategia de regatas, decisiones tácticas y foco mental.',
   },
-  { emoji: "⚙️", name: "Settings", online: false },
-];
+};
+
+function generateId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function parseWebhookResponse(raw: string): string[] {
+  const messages: string[] = [];
+
+  if (!raw || !raw.trim()) return messages;
+
+  try {
+    const parsed = JSON.parse(raw);
+
+    if (Array.isArray(parsed)) {
+      for (const item of parsed) {
+        if (item && typeof item === 'object') {
+          const direct = (item as Record<string, unknown>)['output.respuesta'];
+          const value = typeof direct === 'string' && direct.trim()
+            ? direct
+            : Object.values(item as Record<string, unknown>)[0];
+
+          if (typeof value === 'string' && value.trim()) {
+            messages.push(value.trim());
+          }
+        }
+      }
+    } else if (typeof parsed === 'string' && parsed.trim()) {
+      messages.push(parsed.trim());
+    }
+  } catch {
+    // Si no es JSON válido, usamos el texto completo como un único mensaje
+    if (raw.trim()) {
+      messages.push(raw.trim());
+    }
+  }
+
+  return messages;
+}
 
 const Chat = () => {
   const { toast } = useToast();
 
-  const handleMessageSend = async (
-    message: string,
-    character: Character,
-    index: number
-  ) => {
-    console.log('Mensaje enviado:', { message, character: character.name, index });
+  const [conversations, setConversations] = useState<ConversationState>(EMPTY_CONVERSATIONS);
+  const [selectedAvatar, setSelectedAvatar] = useState<AvatarId | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [hasStartedChat, setHasStartedChat] = useState(false);
 
-    let webhookUrl: string | null = null;
-    switch (character.name.toUpperCase()) {
-      case 'TINO':
-        webhookUrl = 'https://devwebhookn8n.ezequiellamas.com/webhook/8c5faf4e-a8c1-441b-be05-1f50464e1a4d';
-        break;
-      case 'ZAHIA':
-        webhookUrl = 'https://devwebhookn8n.ezequiellamas.com/webhook/795bd04f-9a82-4ac1-b7b4-691ede32286c';
-        break;
-      case 'ROMA':
-        webhookUrl = 'https://devwebhookn8n.ezequiellamas.com/webhook/cfe8b8a1-65b9-49de-bd4c-37881afe5c7f';
-        break;
-      default:
-        webhookUrl = null;
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const avatarOptions: AvatarPillAvatar[] = useMemo(
+    () => [
+      {
+        id: 'TINO',
+        name: 'TINO',
+        image: tinoAvatar,
+        accentClass: 'ring-tino',
+      },
+      {
+        id: 'ZAHIA',
+        name: 'ZAHIA',
+        image: zahiaAvatar,
+        accentClass: 'ring-zahia',
+      },
+      {
+        id: 'ROMA',
+        name: 'ROMA',
+        image: romaAvatar,
+        accentClass: 'ring-roma',
+      },
+    ],
+    []
+  );
+
+  // Cargar estado inicial desde sessionStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored) as {
+        conversations?: ConversationState;
+        selectedAvatar?: AvatarId | null;
+        hasStartedChat?: boolean;
+      };
+
+      setConversations(parsed.conversations ?? EMPTY_CONVERSATIONS);
+      setSelectedAvatar(parsed.selectedAvatar ?? null);
+      setHasStartedChat(parsed.hasStartedChat ?? false);
+    } catch (error) {
+      console.error('Error al cargar el estado del chat desde sessionStorage:', error);
     }
+  }, []);
+
+  // Guardar estado en sessionStorage cuando cambie
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const payload = JSON.stringify({
+        conversations,
+        selectedAvatar,
+        hasStartedChat,
+      });
+      sessionStorage.setItem(STORAGE_KEY, payload);
+    } catch (error) {
+      console.error('Error al guardar el estado del chat en sessionStorage:', error);
+    }
+  }, [conversations, selectedAvatar, hasStartedChat]);
+
+  const currentConversation: ChatMessage[] = selectedAvatar
+    ? conversations[selectedAvatar] ?? []
+    : [];
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [selectedAvatar, currentConversation.length]);
+
+  const handleAvatarSelect = (avatar: AvatarId) => {
+    setSelectedAvatar(avatar);
+
+    // Si ya hubo actividad en cualquier avatar, mantenemos el estado de chat iniciado
+    setHasStartedChat((prev) =>
+      prev || Object.values(conversations).some((msgs) => msgs.length > 0)
+    );
+  };
+
+  const handleSend = async (event: FormEvent) => {
+    event.preventDefault();
+
+    const text = inputValue.trim();
+    if (!text) return;
+
+    if (!selectedAvatar) {
+      toast({
+        title: 'Elegí un avatar',
+        description: 'Seleccioná uno de los avatares de abajo para comenzar a chatear.',
+      });
+      return;
+    }
+
+    if (isSending) return;
+
+    const avatarForThisMessage = selectedAvatar;
+
+    const userMessage: ChatMessage = {
+      id: generateId(),
+      sender: 'user',
+      avatar: avatarForThisMessage,
+      text,
+      timestamp: new Date().toISOString(),
+    };
+
+    setConversations((prev) => ({
+      ...prev,
+      [avatarForThisMessage]: [...(prev[avatarForThisMessage] ?? []), userMessage],
+    }));
+
+    setInputValue('');
+    setIsSending(true);
+    setHasStartedChat(true);
+
+    const webhookUrl = AVATAR_WEBHOOKS[avatarForThisMessage];
 
     if (!webhookUrl) {
       toast({
         title: 'Avatar no disponible',
         description: 'Este avatar aún no tiene un chat conectado.',
       });
+      setIsSending(false);
       return;
     }
 
@@ -75,148 +228,212 @@ const Chat = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message,
-          avatar: character.name,
-          index,
+          message: text,
+          avatar: avatarForThisMessage,
         }),
       });
 
-      const responseText = await response.text();
+      const raw = await response.text();
 
       if (!response.ok) {
-        throw new Error(responseText || 'Error en el servidor de IA');
+        throw new Error(raw || 'Error en el servidor de IA');
       }
 
-      toast({
-        title: `${character.name} respondió`,
-        description: responseText || 'El avatar respondió sin contenido visible.',
+      const assistantMessages = parseWebhookResponse(raw);
+
+      if (!assistantMessages.length) {
+        toast({
+          title: `${avatarForThisMessage} respondió sin contenido`,
+          description: 'El servidor de IA no devolvió texto para mostrar.',
+        });
+        return;
+      }
+
+      setConversations((prev) => {
+        const existing = prev[avatarForThisMessage] ?? [];
+        const newMessages: ChatMessage[] = assistantMessages.map((textPart) => ({
+          id: generateId(),
+          sender: 'avatar',
+          avatar: avatarForThisMessage,
+          text: textPart,
+          timestamp: new Date().toISOString(),
+        }));
+
+        return {
+          ...prev,
+          [avatarForThisMessage]: [...existing, ...newMessages],
+        };
       });
     } catch (error) {
       console.error('Error al enviar mensaje al webhook:', error);
       toast({
         title: 'Error al contactar al avatar',
-        description: 'Ocurrió un problema al enviar tu mensaje. Intenta nuevamente en unos instantes.',
+        description:
+          'Ocurrió un problema al enviar tu mensaje. Intenta nuevamente en unos instantes.',
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
-  const handleCharacterSelect = (character: Character) => {
-    console.log("Avatar seleccionado:", character.name);
+  const renderPlaceholder = () => {
+    if (!hasStartedChat && !selectedAvatar) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center text-center px-4">
+          <p className="mb-2 text-sm font-medium uppercase tracking-wide text-primary">
+            Chat IA con avatares
+          </p>
+          <p className="mb-4 max-w-xl text-balance text-base text-muted-foreground">
+            Elegí a TINO, ZAHIA o ROMA en la píldora de abajo para iniciar una conversación
+            personalizada sobre entrenamiento, nutrición y estrategia.
+          </p>
+          <p className="max-w-md text-xs text-muted-foreground">
+            Cada avatar guarda su propio historial mientras tengas abierta esta página, para que
+            puedas cambiar entre ellos y continuar la conversación cuando quieras.
+          </p>
+        </div>
+      );
+    }
+
+    if (selectedAvatar && currentConversation.length === 0) {
+      const config = AVATAR_CONFIG[selectedAvatar];
+
+      return (
+        <div className="flex h-full flex-col items-center justify-center px-4 text-center">
+          <p className="mb-2 text-sm font-semibold text-foreground">{selectedAvatar}</p>
+          <p className="max-w-md text-sm text-muted-foreground">{config.description}</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Escribí tu primera pregunta abajo para comenzar el chat.
+          </p>
+        </div>
+      );
+    }
+
+    return null;
   };
 
-  const handleDockToggle = (isExpanded: boolean) => {
-    console.log("Chat expandido:", isExpanded);
-  };
-
-  // Animations variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3,
-      }
+  const getAvatarImage = (avatar: AvatarId) => {
+    switch (avatar) {
+      case 'TINO':
+        return tinoAvatar;
+      case 'ZAHIA':
+        return zahiaAvatar;
+      case 'ROMA':
+      default:
+        return romaAvatar;
     }
   };
 
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 30,
-      scale: 0.9
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100,
-        damping: 15,
-        duration: 0.6
-      }
+  const getAvatarBubbleClasses = (avatar: AvatarId) => {
+    switch (avatar) {
+      case 'TINO':
+        return 'bg-tino/10 text-foreground border border-tino/40';
+      case 'ZAHIA':
+        return 'bg-zahia/10 text-foreground border border-zahia/40';
+      case 'ROMA':
+      default:
+        return 'bg-roma/10 text-foreground border border-roma/40';
     }
   };
 
   return (
     <AppLayout>
-      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center px-4">
-        <div className="text-center mb-8 md:mb-12 space-y-3 md:space-y-4 max-w-4xl mx-auto w-full">
-          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-foreground px-4">
+      <div className="relative flex min-h-[calc(100vh-200px)] flex-col items-center justify-center px-4 pb-20">
+        <header className="mb-6 w-full max-w-4xl text-center">
+          <h1 className="px-4 text-3xl font-bold text-foreground sm:text-4xl md:text-5xl font-heading">
             Chat con Avatares IA
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-            Consulta con TINO, ZAHIA y ROMA para obtener recomendaciones personalizadas sobre entrenamiento, nutrición y técnica.
+          <p className="mx-auto mt-3 max-w-2xl px-4 text-base text-muted-foreground sm:text-lg">
+            Conversá de forma continua con TINO, ZAHIA y ROMA. Elegí un avatar abajo y mantené
+            un chat fluido con historial separado para cada uno.
           </p>
-        </div>
+        </header>
 
-        {/* Wrapper for MessageDock with mobile optimization */}
-        <div className="w-full flex justify-center items-center">
-          <MessageDock 
-            characters={netiaCharacters}
-            onMessageSend={handleMessageSend}
-            onCharacterSelect={handleCharacterSelect}
-            onDockToggle={handleDockToggle}
-            expandedWidth={500}
-            placeholder={(name) => `Escribe tu consulta a ${name}...`}
-            theme="light"
-            enableAnimations={true}
-            closeOnSend={false}
-            autoFocus={true}
-            className="w-full max-w-[calc(100vw-2rem)] sm:max-w-none"
-          />
-        </div>
+        <main className="glass relative w-full max-w-4xl flex-1 rounded-3xl border border-border/60 bg-background/80 p-0 shadow-lg backdrop-blur-xl">
+          <div className="flex h-full flex-col">
+            {/* Área de mensajes */}
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {renderPlaceholder()}
 
-        {/* Info cards about avatars - mobile optimized with staggered animations */}
-        <motion.div 
-          className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto w-full px-4"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div 
-            className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-tino/50 transition-all"
-            variants={cardVariants}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <img src={romaAvatar} alt="TINO" className="w-12 h-12 rounded-full object-cover" />
-              <h3 className="font-heading text-lg md:text-xl font-bold text-tino">TINO</h3>
+              {selectedAvatar && currentConversation.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  {currentConversation.map((message) => {
+                    const isUser = message.sender === 'user';
+                    const alignment = isUser ? 'justify-end' : 'justify-start';
+
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex ${alignment} items-end gap-2`}
+                      >
+                        {!isUser && (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-background">
+                            <img
+                              src={getAvatarImage(message.avatar)}
+                              alt={`Avatar ${message.avatar}`}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div
+                          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                            isUser
+                              ? 'bg-primary text-primary-foreground'
+                              : getAvatarBubbleClasses(message.avatar)
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+
+              {!selectedAvatar && hasStartedChat && (
+                <div ref={messagesEndRef} />
+              )}
             </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Especialista en entrenamiento físico y preparación atlética para veleristas.
-            </p>
-          </motion.div>
 
-          <motion.div 
-            className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-zahia/50 transition-all"
-            variants={cardVariants}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <img src={tinoAvatar} alt="ZAHIA" className="w-12 h-12 rounded-full object-cover" />
-              <h3 className="font-heading text-lg md:text-xl font-bold text-zahia">ZAHIA</h3>
+            {/* Input de mensaje */}
+            <div className="border-t border-border/60 bg-background/90 px-4 py-3">
+              <form onSubmit={handleSend} className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="flex-1 rounded-full border border-border/60 bg-background px-4 py-2 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/40"
+                  placeholder={
+                    selectedAvatar
+                      ? `Escribí tu consulta para ${selectedAvatar}...`
+                      : 'Elegí un avatar abajo para comenzar a chatear'
+                  }
+                  disabled={isSending && !selectedAvatar}
+                />
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={!inputValue.trim() || !selectedAvatar || isSending}
+                >
+                  {isSending ? 'Enviando...' : 'Enviar'}
+                </button>
+              </form>
+              {isSending && selectedAvatar && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {selectedAvatar} está pensando su respuesta...
+                </p>
+              )}
             </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Experta en técnica de navegación, maniobras y optimización del rendimiento en el agua.
-            </p>
-          </motion.div>
+          </div>
+        </main>
 
-          <motion.div 
-            className="glass p-4 md:p-6 rounded-2xl border border-border/50 hover:border-roma/50 transition-all sm:col-span-2 lg:col-span-1"
-            variants={cardVariants}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <img src={zahiaAvatar} alt="ROMA" className="w-12 h-12 rounded-full object-cover" />
-              <h3 className="font-heading text-lg md:text-xl font-bold text-roma">ROMA</h3>
-            </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Estratega de regatas, análisis táctico y planificación de competencias.
-            </p>
-          </motion.div>
-        </motion.div>
+        {/* Píldora de selección de avatares */}
+        <AvatarPill
+          avatars={avatarOptions}
+          selectedAvatar={selectedAvatar}
+          onSelect={handleAvatarSelect}
+        />
       </div>
     </AppLayout>
   );
