@@ -1,6 +1,7 @@
 import { AppLayout } from '@/layouts/AppLayout';
 import { MessageDock, Character } from '@/components/ui/message-dock';
 import { motion } from 'framer-motion';
+import { useToast } from '@/components/ui/use-toast';
 import tinoAvatar from '@/assets/tino-avatar.avif';
 import zahiaAvatar from '@/assets/zahia-avatar.avif';
 import romaAvatar from '@/assets/roma-avatar.avif';
@@ -35,9 +36,68 @@ const netiaCharacters: Character[] = [
 ];
 
 const Chat = () => {
-  const handleMessageSend = (message: string, character: Character, index: number) => {
-    console.log("Mensaje enviado:", { message, character: character.name, index });
-    // Aquí se integrará con el backend en el futuro
+  const { toast } = useToast();
+
+  const handleMessageSend = async (
+    message: string,
+    character: Character,
+    index: number
+  ) => {
+    console.log('Mensaje enviado:', { message, character: character.name, index });
+
+    let webhookUrl: string | null = null;
+    switch (character.name.toUpperCase()) {
+      case 'TINO':
+        webhookUrl = 'https://devwebhookn8n.ezequiellamas.com/webhook/8c5faf4e-a8c1-441b-be05-1f50464e1a4d';
+        break;
+      case 'ZAHIA':
+        webhookUrl = 'https://devwebhookn8n.ezequiellamas.com/webhook/795bd04f-9a82-4ac1-b7b4-691ede32286c';
+        break;
+      case 'ROMA':
+        webhookUrl = 'https://devwebhookn8n.ezequiellamas.com/webhook/cfe8b8a1-65b9-49de-bd4c-37881afe5c7f';
+        break;
+      default:
+        webhookUrl = null;
+    }
+
+    if (!webhookUrl) {
+      toast({
+        title: 'Avatar no disponible',
+        description: 'Este avatar aún no tiene un chat conectado.',
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          avatar: character.name,
+          index,
+        }),
+      });
+
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        throw new Error(responseText || 'Error en el servidor de IA');
+      }
+
+      toast({
+        title: `${character.name} respondió`,
+        description: responseText || 'El avatar respondió sin contenido visible.',
+      });
+    } catch (error) {
+      console.error('Error al enviar mensaje al webhook:', error);
+      toast({
+        title: 'Error al contactar al avatar',
+        description: 'Ocurrió un problema al enviar tu mensaje. Intenta nuevamente en unos instantes.',
+      });
+    }
   };
 
   const handleCharacterSelect = (character: Character) => {
