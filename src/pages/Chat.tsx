@@ -429,6 +429,11 @@ const Chat = () => {
                     const isUser = message.sender === 'user';
                     const alignment = isUser ? 'justify-end' : 'justify-start';
                     const isFirstUserMessage = isUser && index === 0;
+                    const bubbleAnimationClass = !isUser
+                      ? 'animate-enter'
+                      : isFirstUserMessage
+                      ? 'animate-enter'
+                      : '';
 
                     return (
                       <div
@@ -449,7 +454,7 @@ const Chat = () => {
                             isUser
                               ? 'bg-primary text-primary-foreground'
                               : getAvatarBubbleClasses(message.avatar)
-                          } ${isFirstUserMessage ? 'animate-enter' : ''}`}
+                          } ${bubbleAnimationClass}`}
                         >
                           <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
                         </div>
