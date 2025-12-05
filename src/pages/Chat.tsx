@@ -94,6 +94,13 @@ const Chat = () => {
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<AvatarId | null>(null);
 
+  // Generar un conversationId por avatar para esta sesión
+  const [conversationIds] = useState<Record<AvatarId, string>>(() => ({
+    TINO: `TINO-${generateId()}`,
+    ZAHIA: `ZAHIA-${generateId()}`,
+    ROMA: `ROMA-${generateId()}`,
+  }));
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // IMPORTANTE: los archivos de imagen están cruzados, así que mapeamos manualmente
@@ -196,6 +203,7 @@ const Chat = () => {
     if (isSending) return;
 
     const avatarForThisMessage = selectedAvatar;
+    const conversationId = conversationIds[avatarForThisMessage];
 
     const userMessage: ChatMessage = {
       id: generateId(),
@@ -236,6 +244,7 @@ const Chat = () => {
         body: JSON.stringify({
           message: text,
           avatar: avatarForThisMessage,
+          conversationId,
         }),
       });
 
