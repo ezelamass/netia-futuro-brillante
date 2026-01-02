@@ -19,6 +19,7 @@ import Calendar from "./pages/Calendar";
 import Training from "./pages/Training";
 import Chat from "./pages/Chat";
 import Leaderboard from "./pages/Leaderboard";
+import Onboarding from "./pages/Onboarding";
 
 // Club pages
 import ClubDashboard from "./pages/club/ClubDashboard";
@@ -45,6 +46,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/register" element={<Register />} />
 
             {/* Student routes */}
