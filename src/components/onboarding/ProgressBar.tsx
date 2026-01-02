@@ -22,7 +22,7 @@ export const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
-    <div className="w-full px-4 py-6">
+    <div className="w-full px-4 py-4">
       {/* Mobile: Simple progress bar */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-2">
@@ -33,7 +33,7 @@ export const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
             {stepLabels[currentStep - 1]}
           </span>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <motion.div
             className="h-full gradient-netia rounded-full"
             initial={{ width: 0 }}

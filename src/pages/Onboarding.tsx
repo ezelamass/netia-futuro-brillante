@@ -103,15 +103,21 @@ const OnboardingContent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
       {/* Header */}
-      <header className="p-4 flex items-center justify-center border-b border-border/50">
+      <header className="p-4 flex items-center justify-center gap-3 border-b border-border/50">
         <img src={netiaLogo} alt="NETIA" className="h-8" />
+        <div className="h-6 w-px bg-border/50" />
+        <span className="text-sm font-medium text-muted-foreground">Configuración inicial</span>
       </header>
 
-      {/* Progress */}
-      <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+      {/* Progress - with proper spacing */}
+      <div className="bg-background/50 backdrop-blur-sm border-b border-border/30">
+        <div className="max-w-3xl mx-auto">
+          <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+        </div>
+      </div>
 
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto px-4 pb-24">
+      {/* Content - with top margin to prevent overlap */}
+      <main className="flex-1 overflow-y-auto px-4 py-6 pb-28">
         <div className="max-w-lg mx-auto">
           <AnimatePresence mode="wait">
             <motion.div key={currentStep}>
