@@ -14,6 +14,7 @@ interface DayDetailProps {
   onClose: () => void;
   onAddEvent: () => void;
   onEventClick?: (event: CalendarEvent) => void;
+  onToggleComplete?: (eventId: string, completed: boolean) => void;
 }
 
 export const DayDetail = ({ 
@@ -22,7 +23,8 @@ export const DayDetail = ({
   open, 
   onClose, 
   onAddEvent,
-  onEventClick 
+  onEventClick,
+  onToggleComplete
 }: DayDetailProps) => {
   if (!date) return null;
 
@@ -59,6 +61,7 @@ export const DayDetail = ({
                   <EventCard 
                     event={event} 
                     onClick={() => onEventClick?.(event)}
+                    onToggleComplete={onToggleComplete}
                   />
                 </motion.div>
               ))
