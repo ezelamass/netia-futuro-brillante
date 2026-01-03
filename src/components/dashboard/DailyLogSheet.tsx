@@ -9,6 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHaptic } from '@/hooks/useHaptic';
 import { DailyLog } from '@/hooks/useDailyLog';
 import { toast } from 'sonner';
 
@@ -37,6 +38,7 @@ const ENERGY_OPTIONS = [
 
 export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyLogSheetProps) => {
   const isMobile = useIsMobile();
+  const { trigger: haptic } = useHaptic();
   const [step, setStep] = useState(initialStep);
   const [data, setData] = useState({
     sleep: 7,
@@ -48,6 +50,7 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
   const [showCelebration, setShowCelebration] = useState(false);
 
   const handleNext = () => {
+    haptic('light');
     if (step < STEPS.length - 1) {
       setStep(step + 1);
     } else {
@@ -96,8 +99,9 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
 
     const colors = ['#22C55E', '#10B981', '#34D399', '#6EE7B7', '#FFD700'];
 
-    // Play celebration sound
+    // Play celebration sound and haptic
     playCelebrationSound();
+    haptic('celebration');
 
     (function frame() {
       confetti({
@@ -135,6 +139,7 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
         setStep(0);
       }, 2000);
     } else {
+      haptic('success');
       onSave(data);
       
       // Show contextual message
