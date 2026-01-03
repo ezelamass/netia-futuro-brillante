@@ -61,11 +61,43 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
     }
   };
 
+  const playCelebrationSound = () => {
+    // Create a simple celebration sound using Web Audio API
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    const playTone = (frequency: number, startTime: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+    
+    // Play a cheerful ascending melody
+    const now = audioContext.currentTime;
+    playTone(523.25, now, 0.15);        // C5
+    playTone(659.25, now + 0.15, 0.15); // E5
+    playTone(783.99, now + 0.3, 0.15);  // G5
+    playTone(1046.50, now + 0.45, 0.3); // C6
+  };
+
   const triggerConfetti = () => {
     const duration = 2000;
     const end = Date.now() + duration;
 
     const colors = ['#22C55E', '#10B981', '#34D399', '#6EE7B7', '#FFD700'];
+
+    // Play celebration sound
+    playCelebrationSound();
 
     (function frame() {
       confetti({
@@ -212,8 +244,8 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
 
               {step === 1 && (
                 <div className="space-y-6">
-                  <div className="flex justify-center gap-2">
-                    {[0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4].map((value, index) => (
+                  <div className="flex justify-center gap-2 flex-wrap">
+                    {[0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0].map((value, index) => (
                       <button
                         key={index}
                         onClick={() => setData({ ...data, hydration: value })}
@@ -224,7 +256,7 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
                             : "opacity-30 scale-90"
                         )}
                       >
-                        💧
+                        🥛
                       </button>
                     ))}
                   </div>
@@ -232,7 +264,7 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
                     <span className="text-4xl font-bold">{data.hydration.toFixed(1)}L</span>
                   </div>
                   <p className="text-center text-sm text-muted-foreground">
-                    Cada gota = 300ml
+                    Cada vaso = 200ml
                   </p>
                 </div>
               )}
