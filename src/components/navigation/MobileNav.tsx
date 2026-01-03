@@ -1,4 +1,4 @@
-import { Home, Dumbbell, Calendar, MessageCircle, Trophy } from 'lucide-react';
+import { Home, Dumbbell, Calendar, MessageCircle, Award } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -30,9 +30,9 @@ const navItems = [
     badge: 3,
   },
   {
-    label: 'Ranking',
-    icon: Trophy,
-    href: '/leaderboard',
+    label: 'Logros',
+    icon: Award,
+    href: '/achievements',
     roles: ['student', 'coach', 'admin'],
   },
 ];
