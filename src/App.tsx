@@ -22,6 +22,7 @@ import Chat from "./pages/Chat";
 import Leaderboard from "./pages/Leaderboard";
 import Achievements from "./pages/Achievements";
 import Onboarding from "./pages/Onboarding";
+import Settings from "./pages/Settings";
 
 // Club pages
 import ClubDashboard from "./pages/club/ClubDashboard";
@@ -33,7 +34,7 @@ import Communication from "./pages/club/Communication";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Users from "./pages/admin/Users";
 import Analytics from "./pages/admin/Analytics";
-import Settings from "./pages/admin/Settings";
+import AdminSettings from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -93,8 +94,15 @@ const App = () => (
                   </RouteGuard>
                 }
               />
+              <Route
+                path="/settings"
+                element={
+                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
+                    <Settings />
+                  </RouteGuard>
+                }
+              />
 
-              {/* Club routes */}
               <Route
                 path="/club/dashboard"
                 element={
@@ -157,7 +165,7 @@ const App = () => (
                 path="/admin/settings"
                 element={
                   <RouteGuard allowedRoles={['admin']}>
-                    <Settings />
+                    <AdminSettings />
                   </RouteGuard>
                 }
               />

@@ -79,7 +79,7 @@ export const Header = () => {
                 <User className="w-4 h-4 mr-2" />
                 Mi Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/admin/settings')}>
+              <DropdownMenuItem onClick={() => navigate('/settings')}>
                 <Settings className="w-4 h-4 mr-2" />
                 Configuración
               </DropdownMenuItem>
