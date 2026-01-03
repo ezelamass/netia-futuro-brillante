@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { AppLayout } from '@/layouts/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Medal, Award } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListSkeleton } from '@/components/skeletons';
+import { useNavigate } from 'react-router-dom';
 
+// Mock data - in real app this would come from API
 const leaderboardData = [
   { rank: 1, name: 'Mateo García', points: 2450, streak: 15 },
   { rank: 2, name: 'Sofia Martínez', points: 2380, streak: 12 },
@@ -12,6 +17,11 @@ const leaderboardData = [
 ];
 
 const Leaderboard = () => {
+  const navigate = useNavigate();
+  // Simulate loading and empty states - in real app would come from API
+  const [isLoading] = useState(false);
+  const [hasEnoughUsers] = useState(true); // Set to false to see empty state
+  
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -37,36 +47,52 @@ const Leaderboard = () => {
             <CardDescription>Los mejores deportistas de la semana</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {leaderboardData.map((athlete) => (
-                <div
-                  key={athlete.rank}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  <div className="flex-shrink-0">
-                    {getRankIcon(athlete.rank)}
-                  </div>
+            {/* Loading state */}
+            {isLoading && (
+              <ListSkeleton rows={5} showAvatar showRank />
+            )}
 
-                  <Avatar className="w-10 h-10">
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-semibold">
-                      {athlete.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
+            {/* Empty state */}
+            {!isLoading && !hasEnoughUsers && (
+              <EmptyState
+                variant="no-leaderboard"
+                onAction={() => navigate('/training')}
+              />
+            )}
 
-                  <div className="flex-1">
-                    <p className="font-semibold">{athlete.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Racha: {athlete.streak} días
-                    </p>
-                  </div>
+            {/* Data state */}
+            {!isLoading && hasEnoughUsers && (
+              <div className="space-y-3">
+                {leaderboardData.map((athlete) => (
+                  <div
+                    key={athlete.rank}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                  >
+                    <div className="flex-shrink-0">
+                      {getRankIcon(athlete.rank)}
+                    </div>
 
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-primary">{athlete.points}</p>
-                    <p className="text-xs text-muted-foreground">puntos</p>
+                    <Avatar className="w-10 h-10">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-semibold">
+                        {athlete.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1">
+                      <p className="font-semibold">{athlete.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Racha: {athlete.streak} días
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-primary">{athlete.points}</p>
+                      <p className="text-xs text-muted-foreground">puntos</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

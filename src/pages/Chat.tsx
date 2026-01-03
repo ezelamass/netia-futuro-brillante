@@ -1,6 +1,8 @@
 import { AppLayout } from '@/layouts/AppLayout';
 import { useEffect, useMemo, useRef, useState, FormEvent } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import tinoAvatar from '@/assets/tino-avatar.avif';
 import zahiaAvatar from '@/assets/zahia-avatar.avif';
 import romaAvatar from '@/assets/roma-avatar.avif';
@@ -336,19 +338,14 @@ const Chat = () => {
   const renderPlaceholder = () => {
     if (!hasStartedChat && !selectedAvatar) {
       return (
-        <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-          <p className="mb-2 text-sm font-medium uppercase tracking-wide text-primary">
-            Chat IA con avatares
-          </p>
-          <p className="mb-4 max-w-xl text-balance text-base text-muted-foreground">
-            Elegí a TINO, ZAHIA o ROMA en la píldora de abajo para iniciar una conversación
-            personalizada sobre entrenamiento, nutrición y estrategia.
-          </p>
-          <p className="max-w-md text-xs text-muted-foreground">
-            Cada avatar guarda su propio historial mientras tengas abierta esta página, para que
-            puedas cambiar entre ellos y continuar la conversación cuando quieras.
-          </p>
-        </div>
+        <EmptyState
+          variant="first-chat"
+          avatar="all"
+          title="Chat con tus coaches IA"
+          description="Elegí a TINO, ZAHIA o ROMA en la píldora de abajo para iniciar una conversación personalizada sobre entrenamiento, nutrición y estrategia."
+          suggestions={['¿Qué entreno hoy?', 'Dame un consejo', '¿Cómo me hidrato mejor?']}
+          className="bg-transparent border-none"
+        />
       );
     }
 
@@ -356,13 +353,20 @@ const Chat = () => {
       const config = AVATAR_CONFIG[selectedAvatar];
 
       return (
-        <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-          <p className="mb-2 text-sm font-semibold text-foreground">{selectedAvatar}</p>
-          <p className="max-w-md text-sm text-muted-foreground">{config.description}</p>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Escribí tu primera pregunta abajo para comenzar el chat.
-          </p>
-        </div>
+        <EmptyState
+          variant="first-chat"
+          avatar={selectedAvatar}
+          title={`¡Hola! Soy ${selectedAvatar}`}
+          description={config.description}
+          suggestions={
+            selectedAvatar === 'TINO' 
+              ? ['¿Qué entreno hoy?', '¿Cómo mejoro mi resistencia?', 'Dame un plan de ejercicios']
+              : selectedAvatar === 'ZAHIA'
+              ? ['¿Qué como antes de entrenar?', '¿Cuánta agua tomo?', 'Dame un snack saludable']
+              : ['¿Cómo me concentro mejor?', 'Tengo nervios antes del partido', 'Dame un consejo mental']
+          }
+          className="bg-transparent border-none"
+        />
       );
     }
 
