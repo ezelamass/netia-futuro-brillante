@@ -24,6 +24,7 @@ const studentNav = [
   { label: 'Chat IA', icon: MessageCircle, href: '/chat', badge: 3 },
   { label: 'Logros', icon: Award, href: '/achievements' },
   { label: 'Ranking', icon: Trophy, href: '/leaderboard' },
+  { label: 'Configuración', icon: Settings, href: '/settings' },
 ];
 
 const clubNav = [
