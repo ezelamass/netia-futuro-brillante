@@ -22,6 +22,7 @@ const Calendar = () => {
   const {
     events,
     addEvent,
+    updateEvent,
     getEventsForDate,
     getEventsForWeek,
     getEventsForMonth,
@@ -29,6 +30,10 @@ const Calendar = () => {
     getWeekStats,
     getStreak,
   } = useCalendarEvents();
+
+  const handleToggleComplete = (eventId: string, completed: boolean) => {
+    updateEvent(eventId, { isCompleted: completed });
+  };
 
   const weekStart = useMemo(() => 
     startOfWeek(currentDate, { weekStartsOn: 1 }), 
@@ -136,6 +141,7 @@ const Calendar = () => {
           open={showDayDetail}
           onClose={() => setShowDayDetail(false)}
           onAddEvent={openAddEvent}
+          onToggleComplete={handleToggleComplete}
         />
         
         {/* Add event modal */}
