@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/sheet';
 import { NotificationPanel } from './NotificationPanel';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationGenerator } from '@/hooks/useNotificationGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export const NotificationBell = () => {
@@ -29,7 +30,11 @@ export const NotificationBell = () => {
     markAllAsRead,
     deleteNotification,
     clearAllRead,
+    addNotification,
   } = useNotifications();
+
+  // Initialize the notification generator
+  useNotificationGenerator({ addNotification });
 
   const handleClose = () => setIsOpen(false);
 
