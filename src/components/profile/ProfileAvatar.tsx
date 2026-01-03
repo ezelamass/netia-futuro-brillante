@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Camera, User } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Camera, Upload, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import tinoAvatar from '@/assets/tino-avatar.avif';
 import zahiaAvatar from '@/assets/zahia-avatar.avif';
@@ -12,6 +12,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ImageCropper } from './ImageCropper';
+import { toast } from 'sonner';
 
 interface ProfileAvatarProps {
   avatarUrl?: string;
@@ -41,6 +44,8 @@ const sizeClasses = {
   lg: 'w-28 h-28',
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 export const ProfileAvatar = ({
   avatarUrl,
   fullName,
@@ -50,6 +55,9 @@ export const ProfileAvatar = ({
   size = 'lg',
 }: ProfileAvatarProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('avatars');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initials = fullName
     .split(' ')
@@ -59,6 +67,9 @@ export const ProfileAvatar = ({
     .toUpperCase();
 
   const defaultAvatarImage = AVATAR_IMAGES[preferredAvatar];
+  
+  // Check if current avatar is a custom photo (base64 or external URL)
+  const isCustomPhoto = avatarUrl && !Object.values(AVATAR_IMAGES).includes(avatarUrl);
 
   const handleSelectAvatar = (avatarId: string) => {
     const avatar = AVATAR_OPTIONS.find(a => a.id === avatarId);
@@ -66,6 +77,53 @@ export const ProfileAvatar = ({
       onAvatarChange(avatar.image);
     }
     setIsOpen(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('La imagen es muy grande. Máximo 5MB.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor seleccioná una imagen válida.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCropComplete = (croppedImageUrl: string) => {
+    if (onAvatarChange) {
+      onAvatarChange(croppedImageUrl);
+    }
+    setSelectedImage(null);
+    setIsOpen(false);
+    toast.success('Foto de perfil actualizada');
+  };
+
+  const handleCropCancel = () => {
+    setSelectedImage(null);
+  };
+
+  const handleRemovePhoto = () => {
+    if (onAvatarChange) {
+      onAvatarChange('');
+    }
+    setIsOpen(false);
+    toast.success('Foto eliminada');
   };
 
   const avatarContent = (
@@ -108,45 +166,106 @@ export const ProfileAvatar = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (!open) {
+        setSelectedImage(null);
+        setActiveTab('avatars');
+      }
+    }}>
       <DialogTrigger asChild>
         {avatarContent}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Elegí tu avatar</DialogTitle>
+          <DialogTitle>
+            {selectedImage ? 'Ajustá tu foto' : 'Elegí tu avatar'}
+          </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-3 gap-4 py-4">
-          {AVATAR_OPTIONS.map((avatar) => (
-            <button
-              key={avatar.id}
-              type="button"
-              onClick={() => handleSelectAvatar(avatar.id)}
-              className={cn(
-                "flex flex-col items-center gap-2 p-3 rounded-xl",
-                "border-2 transition-all",
-                "hover:border-primary hover:bg-primary/5",
-                preferredAvatar === avatar.id
-                  ? "border-primary bg-primary/10"
-                  : "border-border"
-              )}
-            >
-              <div className="w-16 h-16 rounded-full overflow-hidden">
-                <img
-                  src={avatar.image}
-                  alt={avatar.name}
-                  className="w-full h-full object-cover"
-                />
+        
+        {selectedImage ? (
+          <ImageCropper
+            imageSrc={selectedImage}
+            onCropComplete={handleCropComplete}
+            onCancel={handleCropCancel}
+          />
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="avatars">Avatares</TabsTrigger>
+              <TabsTrigger value="photo">Subir foto</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="avatars" className="mt-4">
+              <div className="grid grid-cols-3 gap-4">
+                {AVATAR_OPTIONS.map((avatar) => (
+                  <button
+                    key={avatar.id}
+                    type="button"
+                    onClick={() => handleSelectAvatar(avatar.id)}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-3 rounded-xl",
+                      "border-2 transition-all",
+                      "hover:border-primary hover:bg-primary/5",
+                      preferredAvatar === avatar.id && !isCustomPhoto
+                        ? "border-primary bg-primary/10"
+                        : "border-border"
+                    )}
+                  >
+                    <div className="w-16 h-16 rounded-full overflow-hidden">
+                      <img
+                        src={avatar.image}
+                        alt={avatar.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-sm font-medium">{avatar.name}</span>
+                  </button>
+                ))}
               </div>
-              <span className="text-sm font-medium">{avatar.name}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-center">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Usar iniciales
-          </Button>
-        </div>
+            </TabsContent>
+            
+            <TabsContent value="photo" className="mt-4">
+              <div className="flex flex-col items-center gap-4 py-6">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full max-w-xs gap-2"
+                >
+                  <Upload className="w-5 h-5" />
+                  Seleccionar imagen
+                </Button>
+                
+                <p className="text-sm text-muted-foreground text-center">
+                  Formatos: JPG, PNG, GIF. Máximo 5MB.
+                </p>
+                
+                {isCustomPhoto && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemovePhoto}
+                    className="gap-2 mt-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar foto actual
+                  </Button>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );
