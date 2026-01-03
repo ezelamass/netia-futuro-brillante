@@ -1,4 +1,4 @@
-import { Bell, LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { LogOut, User, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { NotificationBell } from '@/components/notifications';
 
 export const Header = () => {
   const { user, logout } = useAuth();
@@ -50,10 +51,7 @@ export const Header = () => {
         {/* Right: Notifications + Profile */}
         <div className="flex items-center gap-3">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-pulse" />
-          </Button>
+          <NotificationBell />
 
           {/* Profile Dropdown */}
           <DropdownMenu>
