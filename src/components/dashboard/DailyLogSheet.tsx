@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, ChevronLeft, PartyPopper } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,9 +11,6 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DailyLog } from '@/hooks/useDailyLog';
 import { toast } from 'sonner';
-import tinoAvatar from '@/assets/tino-avatar.avif';
-import zahiaAvatar from '@/assets/zahia-avatar.avif';
-import romaAvatar from '@/assets/roma-avatar.avif';
 
 interface DailyLogSheetProps {
   open: boolean;
@@ -63,11 +61,40 @@ export const DailyLogSheet = ({ open, onClose, onSave, initialStep = 0 }: DailyL
     }
   };
 
+  const triggerConfetti = () => {
+    const duration = 2000;
+    const end = Date.now() + duration;
+
+    const colors = ['#22C55E', '#10B981', '#34D399', '#6EE7B7', '#FFD700'];
+
+    (function frame() {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.7 },
+        colors: colors,
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.7 },
+        colors: colors,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+  };
+
   const handleSave = () => {
     const isAllGreen = data.sleep >= 7 && data.hydration >= 1.5 && data.energy >= 4 && data.pain <= 2;
     
     if (isAllGreen) {
       setShowCelebration(true);
+      triggerConfetti();
       setTimeout(() => {
         onSave(data);
         toast.success('+10 XP por completar tu registro diario!');
