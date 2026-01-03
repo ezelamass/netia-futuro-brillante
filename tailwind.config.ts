@@ -60,12 +60,15 @@ export default {
           'text-secondary': "hsl(var(--netia-text-secondary))",
           'text-disabled': "hsl(var(--netia-text-disabled))",
         },
-        // Avatar Colors
+        // Avatar Colors (also available as top-level for easier use)
         avatar: {
           tino: "hsl(var(--avatar-tino))",
           zahia: "hsl(var(--avatar-zahia))",
           roma: "hsl(var(--avatar-roma))",
         },
+        tino: "hsl(var(--avatar-tino))",
+        zahia: "hsl(var(--avatar-zahia))",
+        roma: "hsl(var(--avatar-roma))",
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
@@ -94,6 +97,14 @@ export default {
             height: "0",
           },
         },
+        "shimmer": {
+          "0%": {
+            transform: "translateX(-100%)",
+          },
+          "100%": {
+            transform: "translateX(100%)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -101,6 +112,7 @@ export default {
         "float": "float 3s ease-in-out infinite",
         "fade-in": "fade-in 0.5s ease-out",
         "slide-up": "slide-up 0.5s ease-out",
+        "shimmer": "shimmer 2s infinite",
       },
     },
   },
