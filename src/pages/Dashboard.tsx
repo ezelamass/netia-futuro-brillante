@@ -1,4 +1,5 @@
 import { AppLayout } from '@/layouts/AppLayout';
+import { TodayCard } from '@/components/dashboard/TodayCard';
 import { ProgressWidget } from '@/components/dashboard/ProgressWidget';
 import { SailingCalendarWidget } from '@/components/dashboard/SailingCalendarWidget';
 import { HealthWidget } from '@/components/dashboard/HealthWidget';
@@ -9,6 +10,11 @@ import { EvolutionWidget } from '@/components/dashboard/EvolutionWidget';
 const Dashboard = () => {
   return (
     <AppLayout>
+      {/* Hero - Today Card */}
+      <div className="mb-6">
+        <TodayCard />
+      </div>
+
       {/* First Row - Progress and Sailing Calendar */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <ProgressWidget
