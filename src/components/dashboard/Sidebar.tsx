@@ -1,4 +1,4 @@
-import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, Settings, ChevronLeft } from 'lucide-react';
+import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, Settings, ChevronLeft, Award } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -22,6 +22,7 @@ const studentNav = [
   { label: 'Entrenar', icon: Dumbbell, href: '/training' },
   { label: 'Calendario', icon: Calendar, href: '/calendar' },
   { label: 'Chat IA', icon: MessageCircle, href: '/chat', badge: 3 },
+  { label: 'Logros', icon: Award, href: '/achievements' },
   { label: 'Ranking', icon: Trophy, href: '/leaderboard' },
 ];
 
