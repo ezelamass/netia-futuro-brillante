@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import tinoAvatar from '@/assets/tino-avatar.avif';
-import zahiaAvatar from '@/assets/zahia-avatar.avif';
-import romaAvatar from '@/assets/roma-avatar.avif';
+import tinoAvatar from '@/assets/tino-avatar.png';
+import zahiaAvatar from '@/assets/zahia-avatar.png';
+import romaAvatar from '@/assets/roma-avatar.png';
 import { cn } from '@/lib/utils';
 
 type AvatarType = 'tino' | 'zahia' | 'roma';
