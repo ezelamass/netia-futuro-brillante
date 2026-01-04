@@ -1,4 +1,4 @@
-import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, Settings, ChevronLeft, Award, LucideIcon } from 'lucide-react';
+import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, ChevronLeft, Award, LucideIcon } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -31,7 +31,6 @@ const playerNav: NavItem[] = [
   { label: 'Chat IA', icon: MessageCircle, href: '/chat', badge: 3 },
   { label: 'Logros', icon: Award, href: '/achievements' },
   { label: 'Ranking', icon: Trophy, href: '/leaderboard' },
-  { label: 'Configuración', icon: Settings, href: '/settings' },
 ];
 
 // Navigation items for CLUB role (coach) only
@@ -41,7 +40,6 @@ const clubNav: NavItem[] = [
   { label: 'Carga de Entreno', icon: BarChart3, href: '/club/training-load' },
   { label: 'Informes', icon: FileText, href: '/club/reports' },
   { label: 'Comunicación', icon: Bell, href: '/club/communication' },
-  { label: 'Configuración', icon: Settings, href: '/settings' },
 ];
 
 // Navigation items for ADMIN role only
@@ -49,7 +47,6 @@ const adminNav: NavItem[] = [
   { label: 'Dashboard', icon: Shield, href: '/admin/dashboard' },
   { label: 'Usuarios', icon: UserCog, href: '/admin/users' },
   { label: 'Analíticas', icon: BarChart3, href: '/admin/analytics' },
-  { label: 'Ajustes', icon: Settings, href: '/admin/settings' },
 ];
 
 export const Sidebar = () => {
