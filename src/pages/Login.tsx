@@ -30,7 +30,20 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  // Get the default route based on user role
+  const getDefaultRouteForRole = (role: UserRole): string => {
+    switch (role) {
+      case 'admin':
+        return '/admin/dashboard';
+      case 'coach':
+        return '/club/dashboard';
+      case 'student':
+      default:
+        return '/dashboard';
+    }
+  };
+
+  const from = (location.state as any)?.from?.pathname;
 
   useEffect(() => {
     // Select a random quote on component mount
@@ -74,7 +87,10 @@ const Login = () => {
     try {
       await login(email, password, selectedRole);
       toast.success('¡Bienvenido a NETIA!');
-      navigate(from, { replace: true });
+      
+      // Redirect to role-specific dashboard or original destination
+      const redirectTo = from || getDefaultRouteForRole(selectedRole);
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       toast.error('Error al iniciar sesión');
     } finally {
