@@ -3,9 +3,9 @@ import { ArrowRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TodayAction as TodayActionType } from '@/hooks/useDailyLog';
 import { Button } from '@/components/ui/button';
-import tinoAvatar from '@/assets/tino-avatar.avif';
-import zahiaAvatar from '@/assets/zahia-avatar.avif';
-import romaAvatar from '@/assets/roma-avatar.avif';
+import tinoAvatar from '@/assets/tino-avatar.png';
+import zahiaAvatar from '@/assets/zahia-avatar.png';
+import romaAvatar from '@/assets/roma-avatar.png';
 
 interface TodayActionProps {
   action: TodayActionType;

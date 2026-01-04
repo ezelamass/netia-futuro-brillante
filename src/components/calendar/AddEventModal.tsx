@@ -13,9 +13,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { EVENT_TYPES, EventType, AvatarType, CalendarEvent } from '@/hooks/useCalendarEvents';
 import { cn } from '@/lib/utils';
-import tinoAvatar from '@/assets/tino-avatar.avif';
-import zahiaAvatar from '@/assets/zahia-avatar.avif';
-import romaAvatar from '@/assets/roma-avatar.avif';
+import tinoAvatar from '@/assets/tino-avatar.png';
+import zahiaAvatar from '@/assets/zahia-avatar.png';
+import romaAvatar from '@/assets/roma-avatar.png';
 
 interface AddEventModalProps {
   open: boolean;

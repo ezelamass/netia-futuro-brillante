@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState, FormEvent } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
-import tinoAvatar from '@/assets/tino-avatar.avif';
-import zahiaAvatar from '@/assets/zahia-avatar.avif';
-import romaAvatar from '@/assets/roma-avatar.avif';
+import tinoAvatar from '@/assets/tino-avatar.png';
+import zahiaAvatar from '@/assets/zahia-avatar.png';
+import romaAvatar from '@/assets/roma-avatar.png';
 import { AvatarPill, AvatarId, AvatarPillAvatar } from '@/components/chat/AvatarPill';
 import {
   AlertDialog,
