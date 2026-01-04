@@ -1,48 +1,55 @@
-import { Home, Dumbbell, Calendar, MessageCircle, Award } from 'lucide-react';
+import { Home, Dumbbell, Calendar, MessageCircle, Award, Building2, Users, BarChart3, Shield, UserCog } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 
-const navItems = [
-  {
-    label: 'Inicio',
-    icon: Home,
-    href: '/dashboard',
-    roles: ['student', 'coach', 'admin'],
-  },
-  {
-    label: 'Entrenar',
-    icon: Dumbbell,
-    href: '/training',
-    roles: ['student', 'coach', 'admin'],
-  },
-  {
-    label: 'Calendario',
-    icon: Calendar,
-    href: '/calendar',
-    roles: ['student', 'coach', 'admin'],
-  },
-  {
-    label: 'Chat IA',
-    icon: MessageCircle,
-    href: '/chat',
-    roles: ['student', 'coach', 'admin'],
-    badge: 3,
-  },
-  {
-    label: 'Logros',
-    icon: Award,
-    href: '/achievements',
-    roles: ['student', 'coach', 'admin'],
-  },
+interface NavItem {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  badge?: number;
+}
+
+// Navigation items for PLAYER role only
+const playerNavItems: NavItem[] = [
+  { label: 'Inicio', icon: Home, href: '/dashboard' },
+  { label: 'Entrenar', icon: Dumbbell, href: '/training' },
+  { label: 'Calendario', icon: Calendar, href: '/calendar' },
+  { label: 'Chat IA', icon: MessageCircle, href: '/chat', badge: 3 },
+  { label: 'Logros', icon: Award, href: '/achievements' },
+];
+
+// Navigation items for CLUB role (coach) only
+const clubNavItems: NavItem[] = [
+  { label: 'Panel', icon: Building2, href: '/club/dashboard' },
+  { label: 'Jugadores', icon: Users, href: '/club/roster' },
+  { label: 'Carga', icon: BarChart3, href: '/club/training-load' },
+  { label: 'Informes', icon: Dumbbell, href: '/club/reports' },
+  { label: 'Comunic.', icon: MessageCircle, href: '/club/communication' },
+];
+
+// Navigation items for ADMIN role only
+const adminNavItems: NavItem[] = [
+  { label: 'Dashboard', icon: Shield, href: '/admin/dashboard' },
+  { label: 'Usuarios', icon: UserCog, href: '/admin/users' },
+  { label: 'Analíticas', icon: BarChart3, href: '/admin/analytics' },
 ];
 
 export const MobileNav = () => {
   const { hasRole } = useAuth();
 
-  const visibleItems = navItems.filter(item => 
-    item.roles.some(role => hasRole(role as any))
-  );
+  // Get navigation items based on EXCLUSIVE role
+  const getNavItems = (): NavItem[] => {
+    if (hasRole('admin')) {
+      return adminNavItems;
+    }
+    if (hasRole('coach')) {
+      return clubNavItems;
+    }
+    // Default: student/player
+    return playerNavItems;
+  };
+
+  const visibleItems = getNavItems();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/95 backdrop-blur-lg border-t border-border">
