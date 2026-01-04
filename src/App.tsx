@@ -27,6 +27,7 @@ import Settings from "./pages/Settings";
 // Club pages
 import ClubDashboard from "./pages/club/ClubDashboard";
 import Roster from "./pages/club/Roster";
+import TrainingLoad from "./pages/club/TrainingLoad";
 import Reports from "./pages/club/Reports";
 import Communication from "./pages/club/Communication";
 
@@ -124,6 +125,14 @@ const App = () => (
                 element={
                   <RouteGuard allowedRoles={['coach', 'admin']}>
                     <Reports />
+                  </RouteGuard>
+                }
+              />
+              <Route
+                path="/club/training-load"
+                element={
+                  <RouteGuard allowedRoles={['coach', 'admin']}>
+                    <TrainingLoad />
                   </RouteGuard>
                 }
               />
