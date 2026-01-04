@@ -333,6 +333,10 @@ const Chat = () => {
     }
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setInputValue(suggestion);
+  };
+
   const renderPlaceholder = () => {
     if (!hasStartedChat && !selectedAvatar) {
       return (
@@ -342,6 +346,7 @@ const Chat = () => {
           title="Chat con tus coaches IA"
           description="Elegí a TINO, ZAHIA o ROMA en la píldora de abajo para iniciar una conversación personalizada sobre entrenamiento, nutrición y estrategia."
           suggestions={['¿Qué entreno hoy?', 'Dame un consejo', '¿Cómo me hidrato mejor?']}
+          onSuggestionClick={handleSuggestionClick}
           className="bg-transparent border-none"
         />
       );
@@ -363,6 +368,7 @@ const Chat = () => {
               ? ['¿Qué como antes de entrenar?', '¿Cuánta agua tomo?', 'Dame un snack saludable']
               : ['¿Cómo me concentro mejor?', 'Tengo nervios antes del partido', 'Dame un consejo mental']
           }
+          onSuggestionClick={handleSuggestionClick}
           className="bg-transparent border-none"
         />
       );
