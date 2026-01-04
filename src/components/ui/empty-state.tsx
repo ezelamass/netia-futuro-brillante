@@ -40,14 +40,14 @@ export interface EmptyStateProps {
   onSecondaryAction?: () => void;
   progress?: { current: number; total: number };
   suggestions?: string[];
+  onSuggestionClick?: (suggestion: string) => void;
   className?: string;
 }
 
-// Avatar images mapped correctly (files are swapped)
 const AVATAR_IMAGES = {
-  TINO: romaAvatar,
-  ZAHIA: tinoAvatar,
-  ROMA: zahiaAvatar,
+  TINO: tinoAvatar,
+  ZAHIA: zahiaAvatar,
+  ROMA: romaAvatar,
 };
 
 // Default content for each variant
@@ -159,6 +159,7 @@ export const EmptyState = ({
   onSecondaryAction,
   progress,
   suggestions,
+  onSuggestionClick,
   className,
 }: EmptyStateProps) => {
   const defaults = VARIANT_DEFAULTS[variant];
@@ -227,7 +228,8 @@ export const EmptyState = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + index * 0.1 }}
-                className="text-sm px-3 py-1.5 rounded-full bg-background border border-border hover:bg-muted transition-colors"
+                onClick={() => onSuggestionClick?.(suggestion)}
+                className="text-sm px-3 py-1.5 rounded-full bg-background border border-border hover:bg-muted hover:border-primary/50 transition-colors cursor-pointer"
               >
                 {suggestion}
               </motion.button>
