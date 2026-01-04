@@ -29,7 +29,8 @@ const studentNav = [
 
 const clubNav = [
   { label: 'Panel Club', icon: Building2, href: '/club/dashboard' },
-  { label: 'Plantilla', icon: Users, href: '/club/roster' },
+  { label: 'Mis Jugadores', icon: Users, href: '/club/roster' },
+  { label: 'Carga de Entreno', icon: BarChart3, href: '/club/training-load' },
   { label: 'Informes', icon: FileText, href: '/club/reports' },
   { label: 'Comunicación', icon: Bell, href: '/club/communication' },
 ];
