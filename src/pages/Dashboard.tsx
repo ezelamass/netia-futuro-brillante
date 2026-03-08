@@ -6,6 +6,7 @@ import { HealthWidget } from '@/components/dashboard/HealthWidget';
 import { TechniqueWidget } from '@/components/dashboard/TechniqueWidget';
 import { PhysicalTrainingWidget } from '@/components/dashboard/PhysicalTrainingWidget';
 import { EvolutionWidget } from '@/components/dashboard/EvolutionWidget';
+import { GamificationWidget } from '@/components/dashboard/GamificationWidget';
 
 const Dashboard = () => {
   return (
@@ -15,8 +16,9 @@ const Dashboard = () => {
         <TodayCard />
       </div>
 
-      {/* First Row - Progress and Sailing Calendar */}
+      {/* Gamification + Progress Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <GamificationWidget delay={0.05} />
         <ProgressWidget
           userName="Mateo"
           sport="Fútbol"
@@ -25,48 +27,49 @@ const Dashboard = () => {
           weeklyCompliance={88}
           delay={0.1}
         />
-        
+      </div>
+
+      {/* Second Row - Health and Sailing */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <HealthWidget
+          hydration={2.4}
+          sleep="8h 10m"
+          recovery="optimal"
+          delay={0.2}
+        />
         <SailingCalendarWidget
           hoursNavigated={6.5}
           averageSpeed={4.3}
           windDirection="NW"
           windSpeed={12}
           successfulManeuvers={8}
-          delay={0.2}
+          delay={0.25}
         />
       </div>
 
-      {/* Second Row - Health and Technique */}
+      {/* Third Row - Technique and Physical */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <HealthWidget
-          hydration={2.4}
-          sleep="8h 10m"
-          recovery="optimal"
-          delay={0.3}
-        />
-        
         <TechniqueWidget
           correctDecisions={76}
           concentration={8.5}
           reactionTime={0.58}
-          delay={0.4}
+          delay={0.3}
         />
-      </div>
-
-      {/* Third Row - Physical Training and Evolution */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <PhysicalTrainingWidget
           maxSpeed={27}
           resistance={3}
           attendance={{ completed: 3, total: 3 }}
-          delay={0.5}
+          delay={0.35}
         />
-        
+      </div>
+
+      {/* Evolution */}
+      <div className="grid grid-cols-1 gap-6 mb-6">
         <EvolutionWidget
           physical={8}
           technique={5}
           mental={3}
-          delay={0.6}
+          delay={0.4}
         />
       </div>
     </AppLayout>
