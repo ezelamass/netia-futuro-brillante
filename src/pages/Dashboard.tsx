@@ -7,6 +7,8 @@ import { TechniqueWidget } from '@/components/dashboard/TechniqueWidget';
 import { PhysicalTrainingWidget } from '@/components/dashboard/PhysicalTrainingWidget';
 import { EvolutionWidget } from '@/components/dashboard/EvolutionWidget';
 import { GamificationWidget } from '@/components/dashboard/GamificationWidget';
+import { JoinClubModal } from '@/components/enrollment/JoinClubModal';
+import { EnrollmentsList } from '@/components/enrollment/EnrollmentsList';
 
 const Dashboard = () => {
   return (
@@ -14,6 +16,14 @@ const Dashboard = () => {
       {/* Hero - Today Card */}
       <div className="mb-6">
         <TodayCard />
+      </div>
+
+      {/* Club Enrollment */}
+      <div className="mb-6 space-y-4">
+        <div className="flex justify-end">
+          <JoinClubModal />
+        </div>
+        <EnrollmentsList />
       </div>
 
       {/* Gamification + Progress Row */}

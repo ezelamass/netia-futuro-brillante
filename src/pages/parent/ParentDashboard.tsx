@@ -1,14 +1,51 @@
+import { useEffect, useState } from 'react';
 import { AppLayout } from '@/layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Heart, Calendar, TrendingUp } from 'lucide-react';
+import { useFamilyLinks } from '@/hooks/useFamilyLinks';
+import { useMedicalClearance } from '@/hooks/useMedicalClearance';
+import { LinkChildModal } from '@/components/family/LinkChildModal';
+import { FamilyLinksList } from '@/components/family/FamilyLinksList';
+import { MedicalClearanceStatus } from '@/components/medical/MedicalClearanceStatus';
+import { MedicalClearanceUpload } from '@/components/medical/MedicalClearanceUpload';
 
 const ParentDashboard = () => {
+  const { links, fetchLinks } = useFamilyLinks();
+  const { latestClearance, fetchClearances } = useMedicalClearance();
+  const [firstChildId, setFirstChildId] = useState<string | undefined>();
+
+  useEffect(() => { fetchLinks(); }, [fetchLinks]);
+
+  useEffect(() => {
+    if (links.length > 0) {
+      setFirstChildId(links[0].childId);
+      fetchClearances(links[0].childId);
+    }
+  }, [links, fetchClearances]);
+
+  const clearanceLabel = !firstChildId
+    ? 'Sin hijos'
+    : latestClearance
+      ? latestClearance.status === 'valid' ? 'Vigente' : latestClearance.status === 'expiring_soon' ? 'Por vencer' : 'Vencido'
+      : 'Pendiente';
+
+  const clearanceColor = clearanceLabel === 'Vigente'
+    ? 'text-green-600'
+    : clearanceLabel === 'Por vencer'
+      ? 'text-yellow-600'
+      : clearanceLabel === 'Vencido'
+        ? 'text-destructive'
+        : 'text-muted-foreground';
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold font-heading">Panel Familiar</h1>
-          <p className="text-muted-foreground">Seguimiento de la actividad de tu hijo/a</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold font-heading">Panel Familiar</h1>
+            <p className="text-muted-foreground">Seguimiento de la actividad de tu hijo/a</p>
+          </div>
+          <LinkChildModal />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -18,8 +55,10 @@ const ParentDashboard = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">Vincula a tu hijo/a para comenzar</p>
+              <div className="text-2xl font-bold">{links.length}</div>
+              <p className="text-xs text-muted-foreground">
+                {links.length === 0 ? 'Vincula a tu hijo/a para comenzar' : `${links.filter(l => l.consentGiven).length} con consentimiento`}
+              </p>
             </CardContent>
           </Card>
 
@@ -29,8 +68,10 @@ const ParentDashboard = () => {
               <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">Pendiente</div>
-              <p className="text-xs text-muted-foreground">Sube el certificado médico</p>
+              <div className={`text-2xl font-bold ${clearanceColor}`}>{clearanceLabel}</div>
+              <p className="text-xs text-muted-foreground">
+                {firstChildId ? 'Del primer hijo vinculado' : 'Vincula un hijo primero'}
+              </p>
             </CardContent>
           </Card>
 
@@ -57,16 +98,32 @@ const ParentDashboard = () => {
           </Card>
         </div>
 
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Vincula a tu hijo/a</h3>
-            <p className="text-muted-foreground max-w-md">
-              Para ver la actividad, bienestar y progreso de tu hijo/a, primero necesitás vincularlo a tu cuenta.
-              Contactá al club o pedile que te envíe una invitación.
-            </p>
-          </CardContent>
-        </Card>
+        <FamilyLinksList />
+
+        {firstChildId && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MedicalClearanceStatus userId={firstChildId} />
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                <MedicalClearanceUpload targetUserId={firstChildId} />
+                <p className="text-xs text-muted-foreground mt-2">Subí el apto médico de tu hijo/a</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {links.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Vincula a tu hijo/a</h3>
+              <p className="text-muted-foreground max-w-md">
+                Para ver la actividad, bienestar y progreso de tu hijo/a, primero necesitás vincularlo a tu cuenta
+                usando el botón "Vincular hijo/a" de arriba.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppLayout>
   );
