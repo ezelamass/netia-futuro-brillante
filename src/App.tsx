@@ -72,6 +72,7 @@ const App = () => (
               {/* Parent routes */}
               <Route path="/parent/dashboard" element={<RouteGuard allowedRoles={['parent']}><ParentDashboard /></RouteGuard>} />
               <Route path="/parent/child" element={<RouteGuard allowedRoles={['parent']}><ParentChild /></RouteGuard>} />
+              <Route path="/parent/child/:childId" element={<RouteGuard allowedRoles={['parent']}><ParentChild /></RouteGuard>} />
               <Route path="/parent/medical" element={<RouteGuard allowedRoles={['parent']}><ParentMedical /></RouteGuard>} />
 
               {/* Club routes */}
