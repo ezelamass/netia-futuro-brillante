@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { addDays, startOfWeek, addWeeks, format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isBefore, isAfter } from 'date-fns';
+import { useState, useEffect, useCallback } from 'react';
+import { addDays, startOfWeek, addWeeks, isSameDay, startOfMonth, endOfMonth, isBefore, isAfter, format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type EventType = 'training' | 'nutrition' | 'mental' | 'tournament' | 'school' | 'rest' | 'alert';
 export type AvatarType = 'TINO' | 'ZAHIA' | 'ROMA';
@@ -39,202 +41,83 @@ export const getEventConfig = (type: EventType): EventTypeConfig => {
   return EVENT_TYPES.find(e => e.type === type) || EVENT_TYPES[0];
 };
 
-const STORAGE_KEY = 'netia-calendar-events';
-
-// Generate mock data for the next 4 weeks
-const generateMockEvents = (): CalendarEvent[] => {
-  const today = new Date();
-  const events: CalendarEvent[] = [];
-  
-  // Training events (3-4 per week)
-  const trainingDays = [1, 3, 5]; // Lunes, Miércoles, Viernes
-  for (let week = 0; week < 4; week++) {
-    trainingDays.forEach((dayOffset, idx) => {
-      const date = addDays(startOfWeek(addWeeks(today, week), { weekStartsOn: 1 }), dayOffset);
-      events.push({
-        id: `training-${week}-${idx}`,
-        title: 'Entrenamiento físico con TINO',
-        date,
-        startTime: '16:00',
-        endTime: '17:30',
-        type: 'training',
-        avatar: 'TINO',
-        description: 'Sesión de preparación física integral',
-        isRecurring: true,
-        isCompleted: isBefore(date, today),
-      });
-    });
-    
-    // Add extra training on some weeks
-    if (week % 2 === 0) {
-      const extraDate = addDays(startOfWeek(addWeeks(today, week), { weekStartsOn: 1 }), 6);
-      events.push({
-        id: `training-extra-${week}`,
-        title: 'Práctica de técnica',
-        date: extraDate,
-        startTime: '10:00',
-        endTime: '11:30',
-        type: 'training',
-        avatar: 'TINO',
-        description: 'Sesión enfocada en técnica específica',
-        isCompleted: isBefore(extraDate, today),
-      });
-    }
-  }
-  
-  // Tournament in 2 weeks
-  const tournamentDate = addWeeks(today, 2);
-  events.push({
-    id: 'tournament-1',
-    title: 'Torneo Regional Junior',
-    date: tournamentDate,
-    startTime: '09:00',
-    endTime: '18:00',
-    type: 'tournament',
-    description: 'Competencia regional categoría sub-14. ¡A dar todo!',
-  });
-  
-  // Mental sessions with ROMA (2)
-  events.push({
-    id: 'mental-1',
-    title: 'Sesión de visualización con ROMA',
-    date: addDays(today, 2),
-    startTime: '18:00',
-    endTime: '18:45',
-    type: 'mental',
-    avatar: 'ROMA',
-    description: 'Técnicas de visualización para el próximo torneo',
-  });
-  
-  events.push({
-    id: 'mental-2',
-    title: 'Control de nervios pre-competencia',
-    date: addDays(today, 12),
-    startTime: '17:00',
-    endTime: '17:45',
-    type: 'mental',
-    avatar: 'ROMA',
-    description: 'Preparación mental para el torneo',
-  });
-  
-  // Nutrition plans with ZAHIA (3)
-  events.push({
-    id: 'nutrition-1',
-    title: 'Plan alimenticio semanal',
-    date: addDays(today, 1),
-    startTime: '12:00',
-    type: 'nutrition',
-    avatar: 'ZAHIA',
-    description: 'Revisión del plan de comidas de la semana',
-  });
-  
-  events.push({
-    id: 'nutrition-2',
-    title: 'Hidratación pre-torneo',
-    date: addDays(today, 11),
-    startTime: '10:00',
-    type: 'nutrition',
-    avatar: 'ZAHIA',
-    description: 'Estrategia de hidratación para el torneo',
-  });
-  
-  events.push({
-    id: 'nutrition-3',
-    title: 'Comidas día de competencia',
-    date: addDays(today, 13),
-    startTime: '08:00',
-    type: 'nutrition',
-    avatar: 'ZAHIA',
-    description: 'Qué comer el día del torneo',
-  });
-  
-  // Rest period (3 days)
-  const restStart = addDays(addWeeks(today, 2), 1);
-  for (let i = 0; i < 3; i++) {
-    events.push({
-      id: `rest-${i}`,
-      title: 'Descanso programado',
-      date: addDays(restStart, i),
-      type: 'rest',
-      description: 'Recuperación post-torneo. ¡Descansa bien!',
-    });
-  }
-  
-  // School exam
-  events.push({
-    id: 'school-1',
-    title: 'Examen de Matemáticas',
-    date: addDays(today, 5),
-    startTime: '09:00',
-    endTime: '11:00',
-    type: 'school',
-    description: 'No olvides estudiar. Entrenamiento suave ese día.',
-  });
-  
-  // Alerts
-  events.push({
-    id: 'alert-1',
-    title: '💧 Recordatorio de hidratación',
-    date: addDays(today, 0),
-    startTime: '15:00',
-    type: 'alert',
-    avatar: 'ZAHIA',
-    description: 'Recuerda tomar agua antes del entrenamiento',
-  });
-  
-  events.push({
-    id: 'alert-2',
-    title: '😴 Alerta de sueño',
-    date: addDays(today, 3),
-    startTime: '21:00',
-    type: 'alert',
-    avatar: 'ROMA',
-    description: 'Dormiste menos de 7 horas ayer. Intenta descansar más hoy.',
-  });
-  
-  return events;
-};
-
 export const useCalendarEvents = () => {
-  const [events, setEvents] = useState<CalendarEvent[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        return parsed.map((e: CalendarEvent) => ({
-          ...e,
-          date: new Date(e.date),
-        }));
-      } catch {
-        return generateMockEvents();
-      }
+  const { user } = useAuth();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchEvents = useCallback(async () => {
+    if (!user) { setEvents([]); setIsLoading(false); return; }
+
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('start_time', { ascending: true });
+
+    if (!error && data) {
+      setEvents(data.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        date: new Date(row.start_time),
+        startTime: row.start_time ? format(new Date(row.start_time), 'HH:mm') : undefined,
+        endTime: row.end_time ? format(new Date(row.end_time), 'HH:mm') : undefined,
+        type: (row.event_type || 'training') as EventType,
+        description: row.description || undefined,
+        isRecurring: row.is_recurring || false,
+        isCompleted: false,
+      })));
     }
-    return generateMockEvents();
-  });
+    setIsLoading(false);
+  }, [user]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-  }, [events]);
+  useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
-  const addEvent = (event: Omit<CalendarEvent, 'id'>) => {
-    const newEvent: CalendarEvent = {
-      ...event,
-      id: `event-${Date.now()}`,
-    };
-    setEvents(prev => [...prev, newEvent]);
-    return newEvent;
+  const addEvent = async (event: Omit<CalendarEvent, 'id'>) => {
+    if (!user) return null;
+
+    const startTime = event.startTime
+      ? new Date(`${format(event.date, 'yyyy-MM-dd')}T${event.startTime}:00`).toISOString()
+      : event.date.toISOString();
+    const endTime = event.endTime
+      ? new Date(`${format(event.date, 'yyyy-MM-dd')}T${event.endTime}:00`).toISOString()
+      : undefined;
+
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .insert({
+        user_id: user.id,
+        title: event.title,
+        event_type: event.type,
+        start_time: startTime,
+        end_time: endTime || null,
+        description: event.description || null,
+        is_recurring: event.isRecurring || false,
+        location: null,
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      fetchEvents();
+      return { ...event, id: data.id } as CalendarEvent;
+    }
+    return null;
   };
 
-  const updateEvent = (id: string, updates: Partial<CalendarEvent>) => {
-    setEvents(prev =>
-      prev.map(event =>
-        event.id === id ? { ...event, ...updates } : event
-      )
-    );
+  const updateEvent = async (id: string, updates: Partial<CalendarEvent>) => {
+    const updatePayload: Record<string, any> = {};
+    if (updates.title) updatePayload.title = updates.title;
+    if (updates.type) updatePayload.event_type = updates.type;
+    if (updates.description !== undefined) updatePayload.description = updates.description;
+
+    await supabase.from('calendar_events').update(updatePayload).eq('id', id);
+    fetchEvents();
   };
 
-  const deleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(event => event.id !== id));
+  const deleteEvent = async (id: string) => {
+    await supabase.from('calendar_events').delete().eq('id', id);
+    fetchEvents();
   };
 
   const getEventsForDate = (date: Date): CalendarEvent[] => {
@@ -249,19 +132,18 @@ export const useCalendarEvents = () => {
   const getEventsForWeek = (weekStart: Date): CalendarEvent[] => {
     const weekEnd = addDays(weekStart, 6);
     return events.filter(event => {
-      const eventDate = event.date;
-      return (isSameDay(eventDate, weekStart) || isAfter(eventDate, weekStart)) &&
-             (isSameDay(eventDate, weekEnd) || isBefore(eventDate, weekEnd));
+      const d = event.date;
+      return (isSameDay(d, weekStart) || isAfter(d, weekStart)) &&
+             (isSameDay(d, weekEnd) || isBefore(d, weekEnd));
     });
   };
 
   const getEventsForMonth = (monthDate: Date): CalendarEvent[] => {
-    const monthStart = startOfMonth(monthDate);
-    const monthEnd = endOfMonth(monthDate);
+    const ms = startOfMonth(monthDate);
+    const me = endOfMonth(monthDate);
     return events.filter(event => {
-      const eventDate = event.date;
-      return (isSameDay(eventDate, monthStart) || isAfter(eventDate, monthStart)) &&
-             (isSameDay(eventDate, monthEnd) || isBefore(eventDate, monthEnd));
+      const d = event.date;
+      return (isSameDay(d, ms) || isAfter(d, ms)) && (isSameDay(d, me) || isBefore(d, me));
     });
   };
 
@@ -277,51 +159,29 @@ export const useCalendarEvents = () => {
     const weekEvents = getEventsForWeek(weekStart);
     const trainings = weekEvents.filter(e => e.type === 'training');
     const completed = trainings.filter(e => e.isCompleted).length;
-    return {
-      total: trainings.length,
-      completed,
-      pending: trainings.length - completed,
-    };
+    return { total: trainings.length, completed, pending: trainings.length - completed };
   };
 
   const getStreak = (): number => {
     const today = new Date();
     let streak = 0;
     let checkDate = today;
-    
     while (true) {
       const dayEvents = getEventsForDate(checkDate);
-      const hasCompletedTraining = dayEvents.some(e => e.type === 'training' && e.isCompleted);
-      
-      if (hasCompletedTraining) {
-        streak++;
-        checkDate = addDays(checkDate, -1);
-      } else if (isSameDay(checkDate, today)) {
-        // Today doesn't count against streak if no training scheduled
-        const hasPendingTraining = dayEvents.some(e => e.type === 'training' && !e.isCompleted);
-        if (!hasPendingTraining) {
-          checkDate = addDays(checkDate, -1);
-          continue;
-        }
+      const hasCompleted = dayEvents.some(e => e.type === 'training' && e.isCompleted);
+      if (hasCompleted) { streak++; checkDate = addDays(checkDate, -1); }
+      else if (isSameDay(checkDate, today)) {
+        const hasPending = dayEvents.some(e => e.type === 'training' && !e.isCompleted);
+        if (!hasPending) { checkDate = addDays(checkDate, -1); continue; }
         break;
-      } else {
-        break;
-      }
+      } else break;
     }
-    
     return streak;
   };
 
   return {
-    events,
-    addEvent,
-    updateEvent,
-    deleteEvent,
-    getEventsForDate,
-    getEventsForWeek,
-    getEventsForMonth,
-    getNextEvent,
-    getWeekStats,
-    getStreak,
+    events, isLoading, addEvent, updateEvent, deleteEvent,
+    getEventsForDate, getEventsForWeek, getEventsForMonth,
+    getNextEvent, getWeekStats, getStreak,
   };
 };

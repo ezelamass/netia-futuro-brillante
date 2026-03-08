@@ -1,14 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
-import { addDays, startOfDay, isSameDay, subDays, isAfter } from 'date-fns';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { startOfDay, isSameDay, subDays, isAfter, format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface DailyLog {
   id: string;
   date: Date;
-  sleep: number; // hours (4-12)
-  hydration: number; // liters (0-3)
+  sleep: number;
+  hydration: number;
   energy: 1 | 2 | 3 | 4 | 5;
-  pain: number; // 0-10
+  pain: number;
   painLocation?: string;
+  trained?: boolean;
+  trainingDurationMin?: number;
   completedAt: Date;
 }
 
@@ -22,137 +26,107 @@ export interface TodayAction {
   isCompleted: boolean;
 }
 
-const STORAGE_KEY = 'netia-daily-logs';
-
-// Generate realistic mock data for the last 14 days
-const generateMockLogs = (): DailyLog[] => {
-  const logs: DailyLog[] = [];
-  const today = startOfDay(new Date());
-  
-  for (let i = 1; i <= 14; i++) {
-    const date = subDays(today, i);
-    const baseEnergy = Math.random() > 0.3 ? 4 : 3;
-    const hasPain = Math.random() > 0.8;
-    
-    logs.push({
-      id: `log-${i}`,
-      date,
-      sleep: 6 + Math.random() * 3, // 6-9 hours
-      hydration: 1 + Math.random() * 1.5, // 1-2.5 liters
-      energy: (baseEnergy + Math.floor(Math.random() * 2) - 1) as 1 | 2 | 3 | 4 | 5,
-      pain: hasPain ? Math.floor(Math.random() * 4) + 2 : Math.floor(Math.random() * 2),
-      painLocation: hasPain ? ['rodilla', 'hombro', 'espalda'][Math.floor(Math.random() * 3)] : undefined,
-      completedAt: date,
-    });
-  }
-  
-  return logs;
-};
-
-// Get today's action based on calendar events or suggestions
 const getTodayAction = (): TodayAction => {
   const actions: TodayAction[] = [
-    {
-      id: 'action-training',
-      type: 'training',
-      avatar: 'TINO',
-      title: 'Entrenamiento con TINO',
-      description: 'Calentá 10\' + 3 bloques de 6\'',
-      duration: '45 min',
-      isCompleted: false,
-    },
-    {
-      id: 'action-nutrition',
-      type: 'nutrition',
-      avatar: 'ZAHIA',
-      title: 'Plan de hidratación',
-      description: 'Llevá 2L de agua al entreno',
-      isCompleted: false,
-    },
-    {
-      id: 'action-mental',
-      type: 'mental',
-      avatar: 'ROMA',
-      title: 'Visualización pre-torneo',
-      description: '10 minutos de respiración y enfoque',
-      duration: '10 min',
-      isCompleted: false,
-    },
+    { id: 'action-training', type: 'training', avatar: 'TINO', title: 'Entrenamiento con TINO', description: 'Calentá 10\' + 3 bloques de 6\'', duration: '45 min', isCompleted: false },
+    { id: 'action-nutrition', type: 'nutrition', avatar: 'ZAHIA', title: 'Plan de hidratación', description: 'Llevá 2L de agua al entreno', isCompleted: false },
+    { id: 'action-mental', type: 'mental', avatar: 'ROMA', title: 'Visualización pre-torneo', description: '10 minutos de respiración y enfoque', duration: '10 min', isCompleted: false },
   ];
-  
-  // Return a random action for demo
   return actions[Math.floor(Math.random() * actions.length)];
 };
 
 export const useDailyLog = () => {
-  const [logs, setLogs] = useState<DailyLog[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        return parsed.map((log: DailyLog) => ({
-          ...log,
-          date: new Date(log.date),
-          completedAt: new Date(log.completedAt),
-        }));
-      } catch {
-        return generateMockLogs();
-      }
-    }
-    return generateMockLogs();
-  });
-
+  const { user } = useAuth();
+  const [logs, setLogs] = useState<DailyLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [todayAction, setTodayAction] = useState<TodayAction>(() => {
     const stored = localStorage.getItem('netia-today-action');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return getTodayAction();
-      }
-    }
+    if (stored) { try { return JSON.parse(stored); } catch { return getTodayAction(); } }
     return getTodayAction();
   });
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-  }, [logs]);
 
   useEffect(() => {
     localStorage.setItem('netia-today-action', JSON.stringify(todayAction));
   }, [todayAction]);
 
-  const today = startOfDay(new Date());
-  
-  const todayLog = useMemo(() => {
-    return logs.find(log => isSameDay(log.date, today));
-  }, [logs, today]);
+  // Fetch logs from Supabase
+  const fetchLogs = useCallback(async () => {
+    if (!user) { setLogs([]); setIsLoading(false); return; }
+    
+    const cutoff = subDays(new Date(), 60);
+    const { data, error } = await supabase
+      .from('daily_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('log_date', format(cutoff, 'yyyy-MM-dd'))
+      .order('log_date', { ascending: true });
 
+    if (!error && data) {
+      setLogs(data.map((row: any) => ({
+        id: row.id,
+        date: new Date(row.log_date),
+        sleep: Number(row.sleep_hours) || 0,
+        hydration: Number(row.hydration_liters) || 0,
+        energy: (row.energy_level || 3) as 1 | 2 | 3 | 4 | 5,
+        pain: row.pain_level || 0,
+        painLocation: row.pain_location || undefined,
+        trained: row.trained || false,
+        trainingDurationMin: row.training_duration_min || 0,
+        completedAt: new Date(row.created_at),
+      })));
+    }
+    setIsLoading(false);
+  }, [user]);
+
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+  const today = startOfDay(new Date());
+
+  const todayLog = useMemo(() => logs.find(log => isSameDay(log.date, today)), [logs, today]);
   const hasLoggedToday = !!todayLog;
 
-  const addLog = (logData: Omit<DailyLog, 'id' | 'date' | 'completedAt'>) => {
-    const newLog: DailyLog = {
-      ...logData,
-      id: `log-${Date.now()}`,
-      date: today,
-      completedAt: new Date(),
-    };
-    
-    setLogs(prev => {
-      // Remove existing log for today if any
-      const filtered = prev.filter(log => !isSameDay(log.date, today));
-      return [newLog, ...filtered];
-    });
-    
-    return newLog;
+  const addLog = async (logData: Omit<DailyLog, 'id' | 'date' | 'completedAt'>) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('daily_logs')
+      .upsert({
+        user_id: user.id,
+        log_date: format(today, 'yyyy-MM-dd'),
+        sleep_hours: logData.sleep,
+        hydration_liters: logData.hydration,
+        energy_level: logData.energy,
+        pain_level: logData.pain,
+        pain_location: logData.painLocation || null,
+        trained: logData.trained || false,
+        training_duration_min: logData.trainingDurationMin || 0,
+      }, { onConflict: 'user_id,log_date' })
+      .select()
+      .single();
+
+    if (!error && data) {
+      // Update player_stats XP
+      try {
+        await supabase.from('player_stats').update({ xp: logs.length * 10 + 10 }).eq('user_id', user.id);
+      } catch { /* ignore */ }
+      fetchLogs();
+    }
   };
 
-  const updateTodayLog = (updates: Partial<Omit<DailyLog, 'id' | 'date' | 'completedAt'>>) => {
-    setLogs(prev =>
-      prev.map(log =>
-        isSameDay(log.date, today) ? { ...log, ...updates } : log
-      )
-    );
+  const updateTodayLog = async (updates: Partial<Omit<DailyLog, 'id' | 'date' | 'completedAt'>>) => {
+    if (!user || !todayLog) return;
+    
+    const updatePayload: Record<string, any> = {};
+    if (updates.sleep !== undefined) updatePayload.sleep_hours = updates.sleep;
+    if (updates.hydration !== undefined) updatePayload.hydration_liters = updates.hydration;
+    if (updates.energy !== undefined) updatePayload.energy_level = updates.energy;
+    if (updates.pain !== undefined) updatePayload.pain_level = updates.pain;
+    if (updates.painLocation !== undefined) updatePayload.pain_location = updates.painLocation;
+    if (updates.trained !== undefined) updatePayload.trained = updates.trained;
+    if (updates.trainingDurationMin !== undefined) updatePayload.training_duration_min = updates.trainingDurationMin;
+
+    await supabase.from('daily_logs').update(updatePayload).eq('id', todayLog.id);
+    fetchLogs();
   };
 
   const completeTodayAction = () => {
@@ -169,37 +143,22 @@ export const useDailyLog = () => {
   const getStreak = (): number => {
     let streak = 0;
     let checkDate = hasLoggedToday ? today : subDays(today, 1);
-    
     while (true) {
       const hasLog = logs.some(log => isSameDay(log.date, checkDate));
-      if (hasLog) {
-        streak++;
-        checkDate = subDays(checkDate, 1);
-      } else {
-        break;
-      }
+      if (hasLog) { streak++; checkDate = subDays(checkDate, 1); }
+      else break;
     }
-    
     return streak;
   };
 
   const getXP = (): number => {
-    // 10 XP per daily log, bonus for streaks
     const baseXP = logs.length * 10;
     const streakBonus = getStreak() * 5;
-    return baseXP + streakBonus + 1200; // Base XP
+    return baseXP + streakBonus;
   };
 
   return {
-    logs,
-    todayLog,
-    hasLoggedToday,
-    todayAction,
-    addLog,
-    updateTodayLog,
-    completeTodayAction,
-    getLogsForDays,
-    getStreak,
-    getXP,
+    logs, todayLog, hasLoggedToday, todayAction, isLoading,
+    addLog, updateTodayLog, completeTodayAction, getLogsForDays, getStreak, getXP,
   };
 };
