@@ -24,6 +24,11 @@ import Achievements from "./pages/Achievements";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 
+// Parent pages
+import ParentDashboard from "./pages/parent/ParentDashboard";
+import ParentChild from "./pages/parent/ParentChild";
+import ParentMedical from "./pages/parent/ParentMedical";
+
 // Club pages
 import ClubDashboard from "./pages/club/ClubDashboard";
 import Roster from "./pages/club/Roster";
@@ -54,150 +59,33 @@ const App = () => (
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/register" element={<Register />} />
 
-              {/* Student routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Dashboard />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Profile />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/calendar"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Calendar />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/training"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Training />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/chat"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Chat />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Settings />
-                  </RouteGuard>
-                }
-              />
+              {/* Player routes */}
+              <Route path="/dashboard" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Dashboard /></RouteGuard>} />
+              <Route path="/profile" element={<RouteGuard allowedRoles={['player', 'parent', 'coach', 'club_admin', 'admin']}><Profile /></RouteGuard>} />
+              <Route path="/calendar" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Calendar /></RouteGuard>} />
+              <Route path="/training" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Training /></RouteGuard>} />
+              <Route path="/chat" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Chat /></RouteGuard>} />
+              <Route path="/settings" element={<RouteGuard allowedRoles={['player', 'parent', 'coach', 'club_admin', 'admin']}><Settings /></RouteGuard>} />
+              <Route path="/leaderboard" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Leaderboard /></RouteGuard>} />
+              <Route path="/achievements" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Achievements /></RouteGuard>} />
 
-              <Route
-                path="/club/dashboard"
-                element={
-                  <RouteGuard allowedRoles={['coach', 'admin']}>
-                    <ClubDashboard />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/club/roster"
-                element={
-                  <RouteGuard allowedRoles={['coach', 'admin']}>
-                    <Roster />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/club/reports"
-                element={
-                  <RouteGuard allowedRoles={['coach', 'admin']}>
-                    <Reports />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/club/training-load"
-                element={
-                  <RouteGuard allowedRoles={['coach', 'admin']}>
-                    <TrainingLoad />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/club/communication"
-                element={
-                  <RouteGuard allowedRoles={['coach', 'admin']}>
-                    <Communication />
-                  </RouteGuard>
-                }
-              />
+              {/* Parent routes */}
+              <Route path="/parent/dashboard" element={<RouteGuard allowedRoles={['parent']}><ParentDashboard /></RouteGuard>} />
+              <Route path="/parent/child" element={<RouteGuard allowedRoles={['parent']}><ParentChild /></RouteGuard>} />
+              <Route path="/parent/medical" element={<RouteGuard allowedRoles={['parent']}><ParentMedical /></RouteGuard>} />
+
+              {/* Club routes */}
+              <Route path="/club/dashboard" element={<RouteGuard allowedRoles={['coach', 'club_admin', 'admin']}><ClubDashboard /></RouteGuard>} />
+              <Route path="/club/roster" element={<RouteGuard allowedRoles={['coach', 'club_admin', 'admin']}><Roster /></RouteGuard>} />
+              <Route path="/club/reports" element={<RouteGuard allowedRoles={['coach', 'club_admin', 'admin']}><Reports /></RouteGuard>} />
+              <Route path="/club/training-load" element={<RouteGuard allowedRoles={['coach', 'club_admin', 'admin']}><TrainingLoad /></RouteGuard>} />
+              <Route path="/club/communication" element={<RouteGuard allowedRoles={['coach', 'club_admin', 'admin']}><Communication /></RouteGuard>} />
 
               {/* Admin routes */}
-              <Route
-                path="/admin/dashboard"
-                element={
-                  <RouteGuard allowedRoles={['admin']}>
-                    <AdminDashboard />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <RouteGuard allowedRoles={['admin']}>
-                    <Users />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/admin/analytics"
-                element={
-                  <RouteGuard allowedRoles={['admin']}>
-                    <Analytics />
-                  </RouteGuard>
-                }
-              />
-              <Route
-                path="/admin/settings"
-                element={
-                  <RouteGuard allowedRoles={['admin']}>
-                    <AdminSettings />
-                  </RouteGuard>
-                }
-              />
-
-              {/* Leaderboard */}
-              <Route
-                path="/leaderboard"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Leaderboard />
-                  </RouteGuard>
-                }
-              />
-
-              {/* Achievements */}
-              <Route
-                path="/achievements"
-                element={
-                  <RouteGuard allowedRoles={['student', 'coach', 'admin']}>
-                    <Achievements />
-                  </RouteGuard>
-                }
-              />
+              <Route path="/admin/dashboard" element={<RouteGuard allowedRoles={['admin']}><AdminDashboard /></RouteGuard>} />
+              <Route path="/admin/users" element={<RouteGuard allowedRoles={['admin']}><Users /></RouteGuard>} />
+              <Route path="/admin/analytics" element={<RouteGuard allowedRoles={['admin']}><Analytics /></RouteGuard>} />
+              <Route path="/admin/settings" element={<RouteGuard allowedRoles={['admin']}><AdminSettings /></RouteGuard>} />
 
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
