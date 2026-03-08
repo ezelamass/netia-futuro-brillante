@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { AppLayout } from '@/layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Activity, Flame, Moon } from 'lucide-react';
@@ -15,14 +16,19 @@ interface ChildStats {
 }
 
 const ParentChild = () => {
+  const { childId: childIdParam } = useParams<{ childId: string }>();
   const { links, fetchLinks } = useFamilyLinks();
   const [stats, setStats] = useState<ChildStats | null>(null);
 
   useEffect(() => { fetchLinks(); }, [fetchLinks]);
 
+  // Use URL param if available, otherwise fall back to first linked child
+  const activeChildId = childIdParam || (links.length > 0 ? links[0].childId : null);
+  const activeChild = links.find(l => l.childId === activeChildId);
+
   useEffect(() => {
-    if (!links.length) return;
-    const childId = links[0].childId;
+    if (!activeChildId) return;
+    const childId = activeChildId;
 
     const loadStats = async () => {
       const [{ data: playerStats }, { data: lastLog }] = await Promise.all([
@@ -38,14 +44,14 @@ const ParentChild = () => {
       });
     };
     loadStats();
-  }, [links]);
+  }, [activeChildId]);
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold font-heading">Mi Hijo/a</h1>
+            <h1 className="text-3xl font-bold font-heading">{activeChild?.childName || 'Mi Hijo/a'}</h1>
             <p className="text-muted-foreground">Actividad, bienestar y progreso</p>
           </div>
           <LinkChildModal />
