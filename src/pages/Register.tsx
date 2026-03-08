@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { User, Lock, Mail, UserCircle } from 'lucide-react';
+import { Lock, Mail, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const sportsQuotes = [
@@ -19,59 +19,52 @@ const sportsQuotes = [
   "No te detengas cuando estés cansado, detente cuando hayas terminado - Anónimo",
 ];
 
+type RegisterRole = 'player' | 'parent' | 'coach';
+
+const roleLabels: Record<RegisterRole, string> = {
+  player: 'Jugador',
+  parent: 'Familia',
+  coach: 'Entrenador',
+};
+
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('student');
+  const [selectedRole, setSelectedRole] = useState<RegisterRole>('player');
   const [errors, setErrors] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuote, setCurrentQuote] = useState('');
-  const { login } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Select a random quote on component mount
     const randomQuote = sportsQuotes[Math.floor(Math.random() * sportsQuotes.length)];
     setCurrentQuote(randomQuote);
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [isAuthenticated]);
 
   const validateForm = () => {
     const newErrors = { name: '', email: '', password: '', confirmPassword: '' };
     let isValid = true;
 
-    if (!name) {
-      newErrors.name = 'El nombre es requerido';
-      isValid = false;
-    } else if (name.length < 2) {
-      newErrors.name = 'El nombre debe tener al menos 2 caracteres';
-      isValid = false;
-    }
+    if (!name) { newErrors.name = 'El nombre es requerido'; isValid = false; }
+    else if (name.length < 2) { newErrors.name = 'El nombre debe tener al menos 2 caracteres'; isValid = false; }
 
-    if (!email) {
-      newErrors.email = 'El email es requerido';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email inválido';
-      isValid = false;
-    }
+    if (!email) { newErrors.email = 'El email es requerido'; isValid = false; }
+    else if (!/\S+@\S+\.\S+/.test(email)) { newErrors.email = 'Email inválido'; isValid = false; }
 
-    if (!password) {
-      newErrors.password = 'La contraseña es requerida';
-      isValid = false;
-    } else if (password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-      isValid = false;
-    }
+    if (!password) { newErrors.password = 'La contraseña es requerida'; isValid = false; }
+    else if (password.length < 6) { newErrors.password = 'La contraseña debe tener al menos 6 caracteres'; isValid = false; }
 
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Confirma tu contraseña';
-      isValid = false;
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-      isValid = false;
-    }
+    if (!confirmPassword) { newErrors.confirmPassword = 'Confirma tu contraseña'; isValid = false; }
+    else if (password !== confirmPassword) { newErrors.confirmPassword = 'Las contraseñas no coinciden'; isValid = false; }
 
     setErrors(newErrors);
     return isValid;
@@ -79,21 +72,17 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
-    
     try {
-      // Mock registration - in production, this would call an API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await login(email, password, selectedRole);
-      toast.success('¡Cuenta creada exitosamente! Bienvenido a NETIA 🎉');
-      navigate('/dashboard', { replace: true });
-    } catch (error) {
-      toast.error('Error al crear la cuenta');
+      await register(email, password, name, selectedRole);
+      toast.success('¡Cuenta creada exitosamente! Revisa tu email para confirmar 🎉');
+    } catch (error: any) {
+      const message = error?.message?.includes('already registered')
+        ? 'Este email ya está registrado'
+        : 'Error al crear la cuenta';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +90,6 @@ const Register = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-netia-blue via-primary to-netia-orange p-4 flex items-center justify-center">
-      {/* Animated background elements */}
       <motion.div
         className="absolute inset-0 opacity-20"
         initial={{ opacity: 0 }}
@@ -113,14 +101,12 @@ const Register = () => {
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-netia-blue rounded-full blur-3xl" />
       </motion.div>
 
-      {/* Main register card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
-        {/* Logo with animation */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -132,22 +118,16 @@ const Register = () => {
           </div>
         </motion.div>
 
-        {/* Welcome message */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.6 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-heading font-bold text-white mb-2">
-            Únete a NETIA
-          </h1>
-          <p className="text-white/90 text-lg font-medium">
-            Comienza tu viaje deportivo hoy 🚀
-          </p>
+          <h1 className="text-4xl font-heading font-bold text-white mb-2">Únete a NETIA</h1>
+          <p className="text-white/90 text-lg font-medium">Comienza tu viaje deportivo hoy 🚀</p>
         </motion.div>
 
-        {/* Glassmorphism card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -156,141 +136,62 @@ const Register = () => {
         >
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-white font-medium">
-                Nombre completo
-              </Label>
+              <Label htmlFor="name" className="text-white font-medium">Nombre completo</Label>
               <div className="relative">
                 <UserCircle className="absolute left-3 top-3.5 h-5 w-5 text-white/60" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Tu nombre"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    setErrors({ ...errors, name: '' });
-                  }}
-                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl"
-                />
+                <Input id="name" type="text" placeholder="Tu nombre" value={name}
+                  onChange={(e) => { setName(e.target.value); setErrors({ ...errors, name: '' }); }}
+                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl" />
               </div>
-              {errors.name && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-300 text-sm"
-                >
-                  {errors.name}
-                </motion.p>
-              )}
+              {errors.name && <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-300 text-sm">{errors.name}</motion.p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white font-medium">
-                Email
-              </Label>
+              <Label htmlFor="email" className="text-white font-medium">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3.5 h-5 w-5 text-white/60" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setErrors({ ...errors, email: '' });
-                  }}
-                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl"
-                />
+                <Input id="email" type="email" placeholder="tu@email.com" value={email}
+                  onChange={(e) => { setEmail(e.target.value); setErrors({ ...errors, email: '' }); }}
+                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl" />
               </div>
-              {errors.email && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-300 text-sm"
-                >
-                  {errors.email}
-                </motion.p>
-              )}
+              {errors.email && <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-300 text-sm">{errors.email}</motion.p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white font-medium">
-                Contraseña
-              </Label>
+              <Label htmlFor="password" className="text-white font-medium">Contraseña</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3.5 h-5 w-5 text-white/60" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setErrors({ ...errors, password: '' });
-                  }}
-                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl"
-                />
+                <Input id="password" type="password" placeholder="••••••••" value={password}
+                  onChange={(e) => { setPassword(e.target.value); setErrors({ ...errors, password: '' }); }}
+                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl" />
               </div>
-              {errors.password && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-300 text-sm"
-                >
-                  {errors.password}
-                </motion.p>
-              )}
+              {errors.password && <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-300 text-sm">{errors.password}</motion.p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-white font-medium">
-                Confirmar contraseña
-              </Label>
+              <Label htmlFor="confirmPassword" className="text-white font-medium">Confirmar contraseña</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3.5 h-5 w-5 text-white/60" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setErrors({ ...errors, confirmPassword: '' });
-                  }}
-                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl"
-                />
+                <Input id="confirmPassword" type="password" placeholder="••••••••" value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setErrors({ ...errors, confirmPassword: '' }); }}
+                  className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl" />
               </div>
-              {errors.confirmPassword && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-300 text-sm"
-                >
-                  {errors.confirmPassword}
-                </motion.p>
-              )}
+              {errors.confirmPassword && <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-300 text-sm">{errors.confirmPassword}</motion.p>}
             </div>
 
             <div className="space-y-2">
-              <Label className="text-white font-medium">Tipo de cuenta (Demo)</Label>
+              <Label className="text-white font-medium">Soy...</Label>
               <div className="grid grid-cols-3 gap-2">
-                {(['student', 'coach', 'admin'] as UserRole[]).map((role) => (
-                  <motion.div
-                    key={role}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      type="button"
-                      variant={selectedRole === role ? 'default' : 'outline'}
+                {(['player', 'parent', 'coach'] as RegisterRole[]).map((role) => (
+                  <motion.div key={role} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button type="button" variant={selectedRole === role ? 'default' : 'outline'}
                       onClick={() => setSelectedRole(role)}
                       className={`w-full transition-all rounded-xl ${
                         selectedRole === role
                           ? 'bg-white text-netia-blue hover:bg-white/90'
                           : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
-                      }`}
-                    >
-                      {role === 'student' ? 'Alumno' : role === 'coach' ? 'Club' : 'Admin'}
+                      }`}>
+                      {roleLabels[role]}
                     </Button>
                   </motion.div>
                 ))}
@@ -298,44 +199,26 @@ const Register = () => {
             </div>
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-white text-netia-blue hover:bg-white/90 font-semibold h-12 rounded-xl text-base shadow-lg transition-all"
-              >
+              <Button type="submit" disabled={isLoading}
+                className="w-full bg-white text-netia-blue hover:bg-white/90 font-semibold h-12 rounded-xl text-base shadow-lg transition-all">
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-netia-blue border-t-transparent rounded-full animate-spin" />
                     Creando cuenta...
                   </div>
-                ) : (
-                  'Crear cuenta'
-                )}
+                ) : 'Crear cuenta'}
               </Button>
             </motion.div>
 
             <p className="text-center text-sm text-white/80">
               ¿Ya tienes cuenta?{' '}
-              <Link
-                to="/login"
-                className="text-white font-semibold hover:underline transition-all"
-              >
-                Inicia sesión
-              </Link>
+              <Link to="/login" className="text-white font-semibold hover:underline transition-all">Inicia sesión</Link>
             </p>
           </form>
         </motion.div>
 
-        {/* Rotating sports quote */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="mt-8 text-center"
-        >
-          <p className="text-white/80 text-sm italic max-w-md mx-auto px-4">
-            "{currentQuote}"
-          </p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8, duration: 0.6 }} className="mt-8 text-center">
+          <p className="text-white/80 text-sm italic max-w-md mx-auto px-4">"{currentQuote}"</p>
         </motion.div>
       </motion.div>
     </div>

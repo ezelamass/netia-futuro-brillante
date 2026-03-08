@@ -1,6 +1,6 @@
-import { Home, Dumbbell, Calendar, MessageCircle, Award, Building2, Users, BarChart3, Shield, UserCog } from 'lucide-react';
+import { Home, Dumbbell, Calendar, MessageCircle, Award, Building2, Users, BarChart3, Shield, UserCog, Heart } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItem {
   label: string;
@@ -9,7 +9,6 @@ interface NavItem {
   badge?: number;
 }
 
-// Navigation items for PLAYER role only
 const playerNavItems: NavItem[] = [
   { label: 'Inicio', icon: Home, href: '/dashboard' },
   { label: 'Entrenar', icon: Dumbbell, href: '/training' },
@@ -18,7 +17,12 @@ const playerNavItems: NavItem[] = [
   { label: 'Logros', icon: Award, href: '/achievements' },
 ];
 
-// Navigation items for CLUB role (coach) only
+const parentNavItems: NavItem[] = [
+  { label: 'Panel', icon: Home, href: '/parent/dashboard' },
+  { label: 'Hijo/a', icon: Users, href: '/parent/child' },
+  { label: 'Apto Médico', icon: Heart, href: '/parent/medical' },
+];
+
 const clubNavItems: NavItem[] = [
   { label: 'Panel', icon: Building2, href: '/club/dashboard' },
   { label: 'Jugadores', icon: Users, href: '/club/roster' },
@@ -27,7 +31,6 @@ const clubNavItems: NavItem[] = [
   { label: 'Comunic.', icon: MessageCircle, href: '/club/communication' },
 ];
 
-// Navigation items for ADMIN role only
 const adminNavItems: NavItem[] = [
   { label: 'Dashboard', icon: Shield, href: '/admin/dashboard' },
   { label: 'Usuarios', icon: UserCog, href: '/admin/users' },
@@ -37,15 +40,10 @@ const adminNavItems: NavItem[] = [
 export const MobileNav = () => {
   const { hasRole } = useAuth();
 
-  // Get navigation items based on EXCLUSIVE role
   const getNavItems = (): NavItem[] => {
-    if (hasRole('admin')) {
-      return adminNavItems;
-    }
-    if (hasRole('coach')) {
-      return clubNavItems;
-    }
-    // Default: student/player
+    if (hasRole('admin')) return adminNavItems;
+    if (hasRole('coach') || hasRole('club_admin')) return clubNavItems;
+    if (hasRole('parent')) return parentNavItems;
     return playerNavItems;
   };
 
@@ -55,12 +53,9 @@ export const MobileNav = () => {
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/95 backdrop-blur-lg border-t border-border">
       <div className="flex justify-around items-center h-16 px-2">
         {visibleItems.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
+          <NavLink key={item.href} to={item.href}
             className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-300 min-w-[60px] hover:bg-primary/10"
-            activeClassName="text-primary"
-          >
+            activeClassName="text-primary">
             <div className="relative">
               <item.icon className="w-6 h-6 transition-all duration-300" />
               {item.badge && (
@@ -69,9 +64,7 @@ export const MobileNav = () => {
                 </span>
               )}
             </div>
-            <span className="text-xs font-medium transition-all duration-300">
-              {item.label}
-            </span>
+            <span className="text-xs font-medium transition-all duration-300">{item.label}</span>
           </NavLink>
         ))}
       </div>
