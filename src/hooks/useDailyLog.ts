@@ -106,7 +106,9 @@ export const useDailyLog = () => {
 
     if (!error && data) {
       // Update player_stats XP
-      await supabase.rpc('increment_xp' as any, { _user_id: user.id, _amount: 10 }).catch(() => {});
+      try {
+        await supabase.from('player_stats').update({ xp: logs.length * 10 + 10 }).eq('user_id', user.id);
+      } catch { /* ignore */ }
       fetchLogs();
     }
   };
