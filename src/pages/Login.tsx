@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { User, Lock, Mail } from 'lucide-react';
+import { Lock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 const sportsQuotes = [
@@ -22,34 +22,38 @@ const sportsQuotes = [
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('student');
   const [errors, setErrors] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuote, setCurrentQuote] = useState('');
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Get the default route based on user role
-  const getDefaultRouteForRole = (role: UserRole): string => {
-    switch (role) {
-      case 'admin':
-        return '/admin/dashboard';
-      case 'coach':
-        return '/club/dashboard';
-      case 'student':
-      default:
-        return '/dashboard';
-    }
-  };
 
   const from = (location.state as any)?.from?.pathname;
 
   useEffect(() => {
-    // Select a random quote on component mount
     const randomQuote = sportsQuotes[Math.floor(Math.random() * sportsQuotes.length)];
     setCurrentQuote(randomQuote);
   }, []);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const redirectTo = from || getDefaultRouteForRole(user.role);
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthenticated, user]);
+
+  const getDefaultRouteForRole = (role: string): string => {
+    switch (role) {
+      case 'admin': return '/admin/dashboard';
+      case 'coach':
+      case 'club_admin': return '/club/dashboard';
+      case 'parent': return '/parent/dashboard';
+      case 'player':
+      default: return '/dashboard';
+    }
+  };
 
   const validateForm = () => {
     const newErrors = { email: '', password: '' };
@@ -77,22 +81,17 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
-    
     try {
-      await login(email, password, selectedRole);
+      await login(email, password);
       toast.success('¡Bienvenido a NETIA!');
-      
-      // Redirect to role-specific dashboard or original destination
-      const redirectTo = from || getDefaultRouteForRole(selectedRole);
-      navigate(redirectTo, { replace: true });
-    } catch (error) {
-      toast.error('Error al iniciar sesión');
+    } catch (error: any) {
+      const message = error?.message?.includes('Invalid login')
+        ? 'Email o contraseña incorrectos'
+        : 'Error al iniciar sesión';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +99,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-netia-blue via-primary to-netia-orange p-4 flex items-center justify-center">
-      {/* Animated background elements */}
       <motion.div
         className="absolute inset-0 opacity-20"
         initial={{ opacity: 0 }}
@@ -112,14 +110,12 @@ const Login = () => {
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-netia-blue rounded-full blur-3xl" />
       </motion.div>
 
-      {/* Main login card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
-        {/* Logo with animation */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -131,22 +127,18 @@ const Login = () => {
           </div>
         </motion.div>
 
-        {/* Welcome message */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.6 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-heading font-bold text-white mb-2">
-            NETIA
-          </h1>
+          <h1 className="text-4xl font-heading font-bold text-white mb-2">NETIA</h1>
           <p className="text-white/90 text-lg font-medium">
             Tu mapa deportivo comienza acá 🌍
           </p>
         </motion.div>
 
-        {/* Glassmorphism card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -155,9 +147,7 @@ const Login = () => {
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white font-medium">
-                Email
-              </Label>
+              <Label htmlFor="email" className="text-white font-medium">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3.5 h-5 w-5 text-white/60" />
                 <Input
@@ -165,28 +155,19 @@ const Login = () => {
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setErrors({ ...errors, email: '' });
-                  }}
+                  onChange={(e) => { setEmail(e.target.value); setErrors({ ...errors, email: '' }); }}
                   className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl"
                 />
               </div>
               {errors.email && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-300 text-sm"
-                >
+                <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-300 text-sm">
                   {errors.email}
                 </motion.p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white font-medium">
-                Contraseña
-              </Label>
+              <Label htmlFor="password" className="text-white font-medium">Contraseña</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3.5 h-5 w-5 text-white/60" />
                 <Input
@@ -194,48 +175,15 @@ const Login = () => {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setErrors({ ...errors, password: '' });
-                  }}
+                  onChange={(e) => { setPassword(e.target.value); setErrors({ ...errors, password: '' }); }}
                   className="pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 focus:border-white/40 transition-all h-12 rounded-xl"
                 />
               </div>
               {errors.password && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-300 text-sm"
-                >
+                <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-300 text-sm">
                   {errors.password}
                 </motion.p>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-white font-medium">Tipo de cuenta (Demo)</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['student', 'coach', 'admin'] as UserRole[]).map((role) => (
-                  <motion.div
-                    key={role}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      type="button"
-                      variant={selectedRole === role ? 'default' : 'outline'}
-                      onClick={() => setSelectedRole(role)}
-                      className={`w-full transition-all rounded-xl ${
-                        selectedRole === role
-                          ? 'bg-white text-netia-blue hover:bg-white/90'
-                          : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
-                      }`}
-                    >
-                      {role === 'student' ? 'Alumno' : role === 'coach' ? 'Club' : 'Admin'}
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
             </div>
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -257,17 +205,13 @@ const Login = () => {
 
             <p className="text-center text-sm text-white/80">
               ¿No tienes cuenta?{' '}
-              <Link
-                to="/register"
-                className="text-white font-semibold hover:underline transition-all"
-              >
+              <Link to="/register" className="text-white font-semibold hover:underline transition-all">
                 Regístrate
               </Link>
             </p>
           </form>
         </motion.div>
 
-        {/* Rotating sports quote */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

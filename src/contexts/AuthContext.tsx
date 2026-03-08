@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
-export type UserRole = 'student' | 'coach' | 'admin';
+export type UserRole = 'player' | 'parent' | 'coach' | 'club_admin' | 'admin';
 
 export interface User {
   id: string;
@@ -13,8 +15,9 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string, role?: UserRole) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, fullName: string, role?: UserRole) => Promise<void>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (role: UserRole | UserRole[]) => boolean;
 }
@@ -29,40 +32,92 @@ export const useAuth = () => {
   return context;
 };
 
+// Map DB role to our frontend role type
+const mapRole = (dbRole: string | null): UserRole => {
+  const validRoles: UserRole[] = ['player', 'parent', 'coach', 'club_admin', 'admin'];
+  if (dbRole && validRoles.includes(dbRole as UserRole)) return dbRole as UserRole;
+  return 'player';
+};
+
+const buildUser = async (supabaseUser: SupabaseUser): Promise<User> => {
+  // Fetch role from user_roles table
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', supabaseUser.id)
+    .limit(1)
+    .single();
+
+  // Fetch profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, avatar_url')
+    .eq('id', supabaseUser.id)
+    .single();
+
+  return {
+    id: supabaseUser.id,
+    name: profile?.full_name || supabaseUser.user_metadata?.full_name || '',
+    email: supabaseUser.email || '',
+    role: mapRole(roleData?.role ?? null),
+    avatar: profile?.avatar_url || undefined,
+  };
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for saved session
-    const savedUser = localStorage.getItem('netia_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener BEFORE checking session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          // Use setTimeout to avoid deadlock with Supabase client
+          setTimeout(async () => {
+            const appUser = await buildUser(session.user);
+            setUser(appUser);
+            setIsLoading(false);
+          }, 0);
+        } else {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // Check existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const appUser = await buildUser(session.user);
+        setUser(appUser);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string, role: UserRole = 'student') => {
-    setIsLoading(true);
-    
-    // Mock authentication - in production, this would call an API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const mockUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: email.split('@')[0],
-      email,
-      role,
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('netia_user', JSON.stringify(mockUser));
-    setIsLoading(false);
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
-  const logout = () => {
+  const register = async (email: string, password: string, fullName: string, role: UserRole = 'player') => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName, role },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('netia_user');
   };
 
   const hasRole = (roles: UserRole | UserRole[]) => {
@@ -77,6 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isLoading,
         login,
+        register,
         logout,
         isAuthenticated: !!user,
         hasRole,
