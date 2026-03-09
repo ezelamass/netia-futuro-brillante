@@ -51,7 +51,7 @@ const Chat = () => {
   const [conversations, setConversations] = useState<Record<AvatarId, ChatMessage[]>>({ TINO: [], ZAHIA: [], ROMA: [] });
   const [dbConversationIds, setDbConversationIds] = useState<Record<AvatarId, string | null>>({ TINO: null, ZAHIA: null, ROMA: null });
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarId | null>(null);
-  const [inputValue, setInputValue] = useState('');
+  
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingAvatar, setPendingAvatar] = useState<AvatarId | null>(null);
@@ -164,7 +164,7 @@ const Chat = () => {
 
     const userMessage: ChatMessage = { id: generateId(), sender: 'user', avatar: avatarForMsg, text: text.trim(), timestamp: new Date().toISOString() };
     setConversations(prev => ({ ...prev, [avatarForMsg]: [...(prev[avatarForMsg] ?? []), userMessage] }));
-    setInputValue('');
+    
     setIsSending(true);
     setPendingAvatar(avatarForMsg);
 
@@ -201,11 +201,7 @@ const Chat = () => {
 
 
   const handleSuggestionClick = (suggestion: string) => {
-    if (!selectedAvatar) {
-      // No avatar selected yet — set input value so user picks avatar first
-      setInputValue(suggestion);
-      return;
-    }
+    if (!selectedAvatar) return;
     sendMessage(suggestion);
   };
 
