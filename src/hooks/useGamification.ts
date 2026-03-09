@@ -1,43 +1,60 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { PlayerStats, Badge, BADGES, calculateLevel, getNextLevelXP, LEVEL_THRESHOLDS, PlayerLevel } from '@/types/gamification';
+import { PlayerStats, Badge, calculateLevel, getNextLevelXP, LEVEL_THRESHOLDS, PlayerLevel } from '@/types/gamification';
 import { useDailyLog } from './useDailyLog';
 import { calculateStatus } from './useWellnessStatus';
+
+interface BadgeWithProgress extends Badge {
+  current: number;
+  progress: number;
+}
 
 export const useGamification = () => {
   const { user } = useAuth();
   const { logs, getStreak, getXP } = useDailyLog();
   const [stats, setStats] = useState<PlayerStats | null>(null);
+  const [dbBadges, setDbBadges] = useState<Array<{ id: string; title: string; description: string; icon: string; category: string; requirement: number; xp_reward: number }>>([]);
+  const [earnedBadgeIds, setEarnedBadgeIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchStats = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!user) { setStats(null); setIsLoading(false); return; }
 
-    const { data, error } = await supabase
-      .from('player_stats')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    // Fetch stats, badges catalog, and earned badges in parallel
+    const [statsRes, badgesRes, earnedRes] = await Promise.all([
+      supabase.from('player_stats').select('*').eq('user_id', user.id).maybeSingle(),
+      supabase.from('badges').select('*'),
+      supabase.from('player_badges').select('badge_id').eq('user_id', user.id),
+    ]);
 
-    if (!error && data) {
+    if (!statsRes.error && statsRes.data) {
       setStats({
-        xp: data.xp,
-        level: data.level as PlayerLevel,
-        currentStreak: data.current_streak,
-        longestStreak: data.longest_streak,
-        totalLogs: data.total_logs,
-        totalTrainingMin: data.total_training_min,
-        badges: (data.badges as any[] || []),
+        xp: statsRes.data.xp,
+        level: statsRes.data.level as PlayerLevel,
+        currentStreak: statsRes.data.current_streak,
+        longestStreak: statsRes.data.longest_streak,
+        totalLogs: statsRes.data.total_logs,
+        totalTrainingMin: statsRes.data.total_training_min,
+        badges: [],
       });
     }
+
+    if (!badgesRes.error && badgesRes.data) {
+      setDbBadges(badgesRes.data as any);
+    }
+
+    if (!earnedRes.error && earnedRes.data) {
+      setEarnedBadgeIds(new Set(earnedRes.data.map((r: any) => r.badge_id)));
+    }
+
     setIsLoading(false);
   }, [user]);
 
-  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // Calculate badge progress from local data
-  const badgeProgress = useMemo(() => {
+  const badgeProgress = useMemo((): BadgeWithProgress[] => {
     const streak = getStreak();
     const xp = getXP();
     const greenDays = logs.filter(log => calculateStatus(log) === 'green').length;
@@ -45,7 +62,7 @@ export const useGamification = () => {
     const goodHydrationDays = logs.filter(log => log.hydration >= 2).length;
     const trainingDays = logs.filter(log => log.trained).length;
 
-    return BADGES.map(badge => {
+    return dbBadges.map(badge => {
       let current = 0;
       switch (badge.id) {
         case 'streak-7': case 'streak-30': case 'streak-100': current = streak; break;
@@ -56,14 +73,42 @@ export const useGamification = () => {
         case 'training-10': case 'training-50': case 'training-100': current = trainingDays; break;
       }
 
+      const isUnlocked = earnedBadgeIds.has(badge.id) || current >= badge.requirement;
+
       return {
-        ...badge,
+        id: badge.id,
+        title: badge.title,
+        description: badge.description,
+        icon: badge.icon,
+        category: badge.category as Badge['category'],
+        requirement: badge.requirement,
+        isUnlocked,
         current,
         progress: Math.min((current / badge.requirement) * 100, 100),
-        isUnlocked: current >= badge.requirement,
       };
     });
-  }, [logs, getStreak, getXP]);
+  }, [logs, getStreak, getXP, dbBadges, earnedBadgeIds]);
+
+  // Auto-award badges
+  const awardNewBadges = useCallback(async () => {
+    if (!user) return;
+    const newlyEarned = badgeProgress.filter(b => b.isUnlocked && !earnedBadgeIds.has(b.id));
+    if (newlyEarned.length === 0) return;
+
+    for (const badge of newlyEarned) {
+      await supabase.from('player_badges').upsert(
+        { user_id: user.id, badge_id: badge.id },
+        { onConflict: 'user_id,badge_id' }
+      );
+    }
+    setEarnedBadgeIds(prev => {
+      const next = new Set(prev);
+      newlyEarned.forEach(b => next.add(b.id));
+      return next;
+    });
+  }, [user, badgeProgress, earnedBadgeIds]);
+
+  useEffect(() => { awardNewBadges(); }, [awardNewBadges]);
 
   const currentLevel = useMemo(() => calculateLevel(getXP()), [getXP]);
   const nextLevelXP = useMemo(() => getNextLevelXP(currentLevel), [currentLevel]);
@@ -95,6 +140,6 @@ export const useGamification = () => {
     stats, isLoading, badgeProgress, currentLevel, currentXP,
     nextLevelXP, levelProgress, syncStats,
     unlockedCount: badgeProgress.filter(b => b.isUnlocked).length,
-    totalBadges: BADGES.length,
+    totalBadges: dbBadges.length,
   };
 };

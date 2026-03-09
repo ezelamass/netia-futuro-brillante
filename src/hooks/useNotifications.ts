@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Notification, 
-  MOCK_NOTIFICATIONS, 
   getTimeGroup, 
   TimeGroup,
   TIME_GROUP_LABELS,
   NotificationGroup 
 } from '@/types/notification';
 
-const STORAGE_KEY = 'netia_notifications';
 const MAX_NOTIFICATIONS = 50;
 
 interface UseNotificationsReturn {
@@ -23,54 +23,64 @@ interface UseNotificationsReturn {
 }
 
 export const useNotifications = (): UseNotificationsReturn => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Convert timestamp strings back to Date objects
-        const withDates = parsed.map((n: Notification) => ({
-          ...n,
-          timestamp: new Date(n.timestamp),
-        }));
-        setNotifications(withDates);
-      } else {
-        // Initialize with mock data
-        setNotifications(MOCK_NOTIFICATIONS);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_NOTIFICATIONS));
-      }
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-      setNotifications(MOCK_NOTIFICATIONS);
+  // Fetch from Supabase
+  const fetchNotifications = useCallback(async () => {
+    if (!user) { setNotifications([]); return; }
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(MAX_NOTIFICATIONS);
+
+    if (!error && data) {
+      setNotifications(data.map((row: any) => ({
+        id: row.id,
+        type: row.type,
+        title: row.title,
+        description: row.description,
+        timestamp: new Date(row.created_at),
+        isRead: row.is_read,
+        avatar: row.avatar || undefined,
+        actionUrl: row.action_url || undefined,
+        priority: row.priority,
+        metadata: row.metadata || undefined,
+      })));
     }
-  }, []);
+  }, [user]);
 
-  // Save to localStorage whenever notifications change
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+
+  // Realtime subscription
   useEffect(() => {
-    if (notifications.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
-    }
-  }, [notifications]);
+    if (!user) return;
 
-  // Calculate unread count
-  const unreadCount = useMemo(() => {
-    return notifications.filter(n => !n.isRead).length;
-  }, [notifications]);
+    const channel = supabase
+      .channel('notifications-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
 
-  // Group notifications by time
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchNotifications]);
+
+  const unreadCount = useMemo(() => notifications.filter(n => !n.isRead).length, [notifications]);
+
   const groupedNotifications = useMemo(() => {
     const groups: Record<TimeGroup, Notification[]> = {
-      today: [],
-      yesterday: [],
-      this_week: [],
-      this_month: [],
-      older: [],
+      today: [], yesterday: [], this_week: [], this_month: [], older: [],
     };
 
-    // Sort by timestamp (newest first) then group
     const sorted = [...notifications].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
@@ -80,67 +90,71 @@ export const useNotifications = (): UseNotificationsReturn => {
       groups[group].push(notification);
     });
 
-    // Convert to array format, filtering out empty groups
     const groupOrder: TimeGroup[] = ['today', 'yesterday', 'this_week', 'this_month', 'older'];
-    
     return groupOrder
       .filter(group => groups[group].length > 0)
-      .map(group => ({
-        group,
-        label: TIME_GROUP_LABELS[group],
-        notifications: groups[group],
-      }));
+      .map(group => ({ group, label: TIME_GROUP_LABELS[group], notifications: groups[group] }));
   }, [notifications]);
 
-  // Mark single notification as read
-  const markAsRead = useCallback((id: string) => {
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
-    );
+  const markAsRead = useCallback(async (id: string) => {
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, isRead: true } : n)));
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
   }, []);
 
-  // Mark all as read
-  const markAllAsRead = useCallback(() => {
+  const markAllAsRead = useCallback(async () => {
+    if (!user) return;
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  }, []);
+    await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+  }, [user]);
 
-  // Delete single notification
-  const deleteNotification = useCallback((id: string) => {
+  const deleteNotification = useCallback(async (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
+    await supabase.from('notifications').delete().eq('id', id);
   }, []);
 
-  // Clear all read notifications
-  const clearAllRead = useCallback(() => {
+  const clearAllRead = useCallback(async () => {
+    if (!user) return;
     setNotifications(prev => prev.filter(n => !n.isRead));
-  }, []);
+    await supabase.from('notifications').delete().eq('user_id', user.id).eq('is_read', true);
+  }, [user]);
 
-  // Add new notification
-  const addNotification = useCallback(
-    (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => {
-      const newNotification: Notification = {
-        ...notification,
-        id: crypto.randomUUID(),
-        timestamp: new Date(),
+  const addNotification = useCallback(async (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: user.id,
+        type: notification.type,
+        title: notification.title,
+        description: notification.description,
+        avatar: notification.avatar || null,
+        action_url: notification.actionUrl || null,
+        priority: notification.priority,
+        metadata: notification.metadata || {},
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      const newNotif: Notification = {
+        id: data.id,
+        type: data.type as any,
+        title: data.title,
+        description: data.description,
+        timestamp: new Date(data.created_at),
         isRead: false,
+        avatar: data.avatar as any,
+        actionUrl: data.action_url || undefined,
+        priority: data.priority as any,
+        metadata: data.metadata as any,
       };
-
-      setNotifications(prev => {
-        const updated = [newNotification, ...prev];
-        // Keep only last MAX_NOTIFICATIONS
-        return updated.slice(0, MAX_NOTIFICATIONS);
-      });
-    },
-    []
-  );
+      setNotifications(prev => [newNotif, ...prev].slice(0, MAX_NOTIFICATIONS));
+    }
+  }, [user]);
 
   return {
-    notifications,
-    unreadCount,
-    groupedNotifications,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    clearAllRead,
-    addNotification,
+    notifications, unreadCount, groupedNotifications,
+    markAsRead, markAllAsRead, deleteNotification, clearAllRead, addNotification,
   };
 };
