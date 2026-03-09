@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import Training from "./pages/Training";
+import DiagnosticTest from "./pages/DiagnosticTest";
 import Chat from "./pages/Chat";
 import Leaderboard from "./pages/Leaderboard";
 import Achievements from "./pages/Achievements";
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="/settings" element={<RouteGuard allowedRoles={['player', 'parent', 'coach', 'club_admin', 'admin']}><Settings /></RouteGuard>} />
               <Route path="/leaderboard" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Leaderboard /></RouteGuard>} />
               <Route path="/achievements" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Achievements /></RouteGuard>} />
+              <Route path="/diagnostic" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><DiagnosticTest /></RouteGuard>} />
 
               {/* Parent routes */}
               <Route path="/parent/dashboard" element={<RouteGuard allowedRoles={['parent']}><ParentDashboard /></RouteGuard>} />
