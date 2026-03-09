@@ -58,7 +58,7 @@ export const useEnrollment = () => {
       .select('id, name')
       .eq('invite_code', inviteCode.trim().toUpperCase())
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     if (clubError || !club) {
       toast.error('Código de invitación inválido');
@@ -71,7 +71,7 @@ export const useEnrollment = () => {
       .select('id')
       .eq('user_id', user.id)
       .eq('club_id', club.id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       toast.info('Ya estás inscrito en este club');

@@ -49,7 +49,7 @@ export const useFamilyLinks = () => {
       .from('profiles')
       .select('id, full_name')
       .eq('email', childEmail.trim().toLowerCase())
-      .single();
+      .maybeSingle();
 
     if (findError || !childProfile) {
       toast.error('No se encontró una cuenta con ese email');
@@ -62,7 +62,7 @@ export const useFamilyLinks = () => {
       .select('id')
       .eq('parent_id', user.id)
       .eq('child_id', childProfile.id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       toast.info('Ya tenés vinculado a este hijo/a');

@@ -32,8 +32,8 @@ const ParentChild = () => {
 
     const loadStats = async () => {
       const [{ data: playerStats }, { data: lastLog }] = await Promise.all([
-        supabase.from('player_stats').select('current_streak, total_logs').eq('user_id', childId).single(),
-        supabase.from('daily_logs').select('mood, sleep_hours').eq('user_id', childId).order('log_date', { ascending: false }).limit(1).single(),
+        supabase.from('player_stats').select('current_streak, total_logs').eq('user_id', childId).maybeSingle(),
+        supabase.from('daily_logs').select('mood, sleep_hours').eq('user_id', childId).order('log_date', { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       setStats({

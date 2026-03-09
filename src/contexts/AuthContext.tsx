@@ -46,14 +46,14 @@ const buildUser = async (supabaseUser: SupabaseUser): Promise<User> => {
     .select('role')
     .eq('user_id', supabaseUser.id)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   // Fetch profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, avatar_url')
     .eq('id', supabaseUser.id)
-    .single();
+    .maybeSingle();
 
   return {
     id: supabaseUser.id,
