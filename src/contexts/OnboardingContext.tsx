@@ -200,16 +200,25 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const completeOnboarding = async () => {
     setHasCompletedOnboarding(true);
     if (user) {
+      const profileUpdate: Record<string, any> = {
+        onboarding_completed: true,
+        full_name: data.fullName || user.name,
+        city: data.city || null,
+        country: data.country || 'Argentina',
+      };
+
+      // Role-specific fields
+      if (user.role === 'player') {
+        profileUpdate.sport = data.mainSport || 'tenis';
+        profileUpdate.date_of_birth = data.birthDate || null;
+      } else if (user.role === 'coach' || user.role === 'club_admin') {
+        profileUpdate.club_name = data.coachClubName || null;
+        profileUpdate.sport = data.mainSport || null;
+      }
+
       await supabase
         .from('profiles')
-        .update({
-          onboarding_completed: true,
-          full_name: data.fullName || user.name,
-          city: data.city || null,
-          country: data.country || 'Argentina',
-          sport: data.mainSport || 'tenis',
-          date_of_birth: data.birthDate || null,
-        })
+        .update(profileUpdate)
         .eq('id', user.id);
     } else {
       localStorage.setItem('netia_onboarding_completed', 'true');
