@@ -21,11 +21,6 @@ interface ChatMessage {
   timestamp: string;
 }
 
-const AVATAR_WEBHOOKS: Record<AvatarId, string> = {
-  TINO: 'https://devwebhookn8n.ezequiellamas.com/webhook/8c5faf4e-a8c1-441b-be05-1f50464e1a4d',
-  ZAHIA: 'https://devwebhookn8n.ezequiellamas.com/webhook/795bd04f-9a82-4ac1-b7b4-691ede32286c',
-  ROMA: 'https://devwebhookn8n.ezequiellamas.com/webhook/cfe8b8a1-65b9-49de-bd4c-37881afe5c7f',
-};
 
 const AVATAR_CONFIG: Record<AvatarId, { description: string }> = {
   TINO: { description: 'TINO te acompaña con entrenamiento físico y preparación atlética para rendir al máximo.' },
@@ -35,23 +30,6 @@ const AVATAR_CONFIG: Record<AvatarId, { description: string }> = {
 
 function generateId() { return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`; }
 
-function parseWebhookResponse(raw: string): string[] {
-  const messages: string[] = [];
-  if (!raw || !raw.trim()) return messages;
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      for (const item of parsed) {
-        if (item && typeof item === 'object') {
-          const direct = (item as Record<string, unknown>)['output.respuesta'];
-          const value = typeof direct === 'string' && direct.trim() ? direct : Object.values(item as Record<string, unknown>)[0];
-          if (typeof value === 'string' && value.trim()) messages.push(value.trim());
-        }
-      }
-    } else if (typeof parsed === 'string' && parsed.trim()) messages.push(parsed.trim());
-  } catch { if (raw.trim()) messages.push(raw.trim()); }
-  return messages;
-}
 
 const Chat = () => {
   const { toast } = useToast();
@@ -182,15 +160,12 @@ const Chat = () => {
     if (conversationId) await saveMessage(conversationId, 'user', text);
 
     try {
-      const response = await fetch(AVATAR_WEBHOOKS[avatarForMsg], {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, avatar: avatarForMsg, conversationId: conversationId || avatarForMsg }),
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('avatar-chat', {
+        body: { message: text, avatar: avatarForMsg, conversationId: conversationId || avatarForMsg },
       });
-      const raw = await response.text();
-      if (!response.ok) throw new Error(raw);
+      if (fnError) throw new Error(fnError.message || 'Edge function error');
 
-      const assistantMessages = parseWebhookResponse(raw);
+      const assistantMessages: string[] = Array.isArray(fnData?.respuesta) ? fnData.respuesta.filter((s: any) => typeof s === 'string' && s.trim()) : [];
       if (!assistantMessages.length) { toast({ title: `${avatarForMsg} respondió sin contenido` }); return; }
 
       assistantMessages.forEach((textPart, index) => {

@@ -1,1 +1,7 @@
 project_id = "doeqebxhzctlhizcphkq"
+
+[functions.avatar-chat]
+verify_jwt = false
+
+[functions.avatar-rag-upload]
+verify_jwt = false
