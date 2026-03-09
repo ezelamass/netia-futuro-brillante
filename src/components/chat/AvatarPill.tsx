@@ -18,8 +18,8 @@ interface AvatarPillProps {
 
 export const AvatarPill: FC<AvatarPillProps> = ({ avatars, selectedAvatar, onSelect }) => {
   return (
-    <div className="pointer-events-none fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center justify-center px-4">
-      <div className="pointer-events-auto glass flex w-full max-w-md items-center justify-between gap-3 rounded-full border border-border/60 bg-background/90 px-3 py-2 shadow-lg backdrop-blur-xl">
+    <div className="pointer-events-none fixed bottom-20 lg:bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center justify-center px-4">
+      <div className="pointer-events-auto flex w-full max-w-md items-center justify-center gap-4 rounded-full border border-border/60 bg-background/95 px-4 py-2.5 shadow-lg backdrop-blur-xl">
         {avatars.map((avatar) => {
           const isActive = selectedAvatar === avatar.id;
 
@@ -29,18 +29,29 @@ export const AvatarPill: FC<AvatarPillProps> = ({ avatars, selectedAvatar, onSel
               type="button"
               onClick={() => onSelect(avatar.id)}
               className={cn(
-                'relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-background/80 transform transition-all duration-200 ease-out opacity-80 hover:opacity-100 hover:shadow-md hover:scale-105 sm:h-14 sm:w-14',
-                isActive && 'opacity-100 scale-105 shadow-lg ring-2 ring-offset-2 ring-offset-background',
-                isActive && (avatar.accentClass ?? 'ring-primary')
+                'relative flex flex-col items-center gap-1 transition-all duration-200',
+                isActive ? 'opacity-100' : 'opacity-70 hover:opacity-100'
               )}
               aria-label={`Seleccionar avatar ${avatar.name}`}
             >
-              <img
-                src={avatar.image}
-                alt={`Avatar ${avatar.name}`}
-                className="h-full w-full object-cover"
-              />
-              <span className="absolute bottom-1 right-1 h-3 w-3 rounded-full border border-background bg-emerald-400 shadow" />
+              <div className={cn(
+                'flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 bg-background/80 transition-all duration-200 sm:h-12 sm:w-12',
+                isActive
+                  ? cn('scale-110 shadow-lg ring-2 ring-offset-2 ring-offset-background', avatar.accentClass ?? 'ring-primary', 'border-transparent')
+                  : 'border-border/60 hover:shadow-md hover:scale-105'
+              )}>
+                <img
+                  src={avatar.image}
+                  alt={`Avatar ${avatar.name}`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className={cn(
+                'text-[10px] font-semibold tracking-wide transition-colors',
+                isActive ? 'text-foreground' : 'text-muted-foreground'
+              )}>
+                {avatar.name}
+              </span>
             </button>
           );
         })}
