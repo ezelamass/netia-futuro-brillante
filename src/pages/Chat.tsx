@@ -117,12 +117,6 @@ const Chat = () => {
     if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [selectedAvatar, currentConversation.length]);
 
-  // Focus input when avatar is selected
-  useEffect(() => {
-    if (selectedAvatar && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [selectedAvatar]);
 
   const getOrCreateConversation = async (avatar: AvatarId): Promise<string | null> => {
     if (!user) return null;
