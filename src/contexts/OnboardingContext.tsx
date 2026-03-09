@@ -122,7 +122,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
         .from('profiles')
         .select('onboarding, onboarding_completed')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         if (profile.onboarding && typeof profile.onboarding === 'object') {
