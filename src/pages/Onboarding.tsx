@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOnboarding, OnboardingProvider } from '@/contexts/OnboardingContext';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ProgressBar } from '@/components/onboarding/ProgressBar';
 import { PersonalDataStep } from '@/components/onboarding/steps/PersonalDataStep';
 import { ObjectivesStep } from '@/components/onboarding/steps/ObjectivesStep';
@@ -11,72 +12,162 @@ import { NutritionStep } from '@/components/onboarding/steps/NutritionStep';
 import { MentalProfileStep } from '@/components/onboarding/steps/MentalProfileStep';
 import { FamilyStep } from '@/components/onboarding/steps/FamilyStep';
 import { PersonalizationStep } from '@/components/onboarding/steps/PersonalizationStep';
+import { ParentProfileStep } from '@/components/onboarding/steps/ParentProfileStep';
+import { LinkChildrenStep } from '@/components/onboarding/steps/LinkChildrenStep';
+import { ParentNotificationsStep } from '@/components/onboarding/steps/ParentNotificationsStep';
+import { ParentTermsStep } from '@/components/onboarding/steps/ParentTermsStep';
+import { CoachProfileStep } from '@/components/onboarding/steps/CoachProfileStep';
+import { ClubSportStep } from '@/components/onboarding/steps/ClubSportStep';
+import { TeamSetupStep } from '@/components/onboarding/steps/TeamSetupStep';
+import { CoachCommunicationStep } from '@/components/onboarding/steps/CoachCommunicationStep';
+import { AdminProfileStep } from '@/components/onboarding/steps/AdminProfileStep';
+import { PlatformPrefsStep } from '@/components/onboarding/steps/PlatformPrefsStep';
+import { AdminConfirmationStep } from '@/components/onboarding/steps/AdminConfirmationStep';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import netiaLogo from '@/assets/netia-logo.png';
+import type { ReactNode } from 'react';
 
-const TOTAL_STEPS = 8;
+interface StepConfig {
+  label: string;
+  component: ReactNode;
+}
+
+const playerSteps: StepConfig[] = [
+  { label: 'Datos', component: <PersonalDataStep /> },
+  { label: 'Objetivos', component: <ObjectivesStep /> },
+  { label: 'Calendario', component: <CalendarStep /> },
+  { label: 'Físico', component: <PhysicalProfileStep /> },
+  { label: 'Nutrición', component: <NutritionStep /> },
+  { label: 'Mental', component: <MentalProfileStep /> },
+  { label: 'Familia', component: <FamilyStep /> },
+  { label: 'Avatar', component: <PersonalizationStep /> },
+];
+
+const parentSteps: StepConfig[] = [
+  { label: 'Perfil', component: <ParentProfileStep /> },
+  { label: 'Hijos', component: <LinkChildrenStep /> },
+  { label: 'Alertas', component: <ParentNotificationsStep /> },
+  { label: 'Términos', component: <ParentTermsStep /> },
+];
+
+const coachSteps: StepConfig[] = [
+  { label: 'Perfil', component: <CoachProfileStep /> },
+  { label: 'Club', component: <ClubSportStep /> },
+  { label: 'Equipo', component: <TeamSetupStep /> },
+  { label: 'Comunicación', component: <CoachCommunicationStep /> },
+  { label: 'Avatar', component: <PersonalizationStep /> },
+];
+
+const adminSteps: StepConfig[] = [
+  { label: 'Perfil', component: <AdminProfileStep /> },
+  { label: 'Preferencias', component: <PlatformPrefsStep /> },
+  { label: 'Confirmación', component: <AdminConfirmationStep /> },
+];
+
+const getStepsForRole = (role: UserRole): StepConfig[] => {
+  switch (role) {
+    case 'parent': return parentSteps;
+    case 'coach': return coachSteps;
+    case 'club_admin': return coachSteps; // club_admin uses coach flow
+    case 'admin': return adminSteps;
+    default: return playerSteps;
+  }
+};
+
+const getRedirectForRole = (role: UserRole): string => {
+  switch (role) {
+    case 'parent': return '/parent/dashboard';
+    case 'coach':
+    case 'club_admin': return '/club/dashboard';
+    case 'admin': return '/admin/dashboard';
+    default: return '/dashboard';
+  }
+};
 
 const OnboardingContent = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { currentStep, setCurrentStep, data, completeOnboarding } = useOnboarding();
   const [showCelebration, setShowCelebration] = useState(false);
 
+  const role = user?.role ?? 'player';
+  const steps = useMemo(() => getStepsForRole(role), [role]);
+  const totalSteps = steps.length;
+  const stepLabels = useMemo(() => steps.map(s => s.label), [steps]);
+
   const validateStep = (step: number): boolean => {
-    switch (step) {
-      case 1:
-        if (!data.fullName || !data.birthDate || !data.country || !data.mainSport || !data.level) {
-          toast({ title: 'Completá los campos obligatorios', variant: 'destructive' });
-          return false;
-        }
-        return true;
-      case 2:
-        if (!data.mainGoal) {
-          toast({ title: 'Elegí tu meta principal', variant: 'destructive' });
-          return false;
-        }
-        return true;
-      case 7:
-        if (!data.tutorName || !data.tutorEmail || !data.dataAuthorization || !data.termsAccepted) {
-          toast({ title: 'Completá los datos del tutor y aceptá los términos', variant: 'destructive' });
-          return false;
-        }
-        return true;
-      default:
-        return true;
+    // Player validations
+    if (role === 'player') {
+      if (step === 1 && (!data.fullName || !data.birthDate || !data.country || !data.mainSport || !data.level)) {
+        toast({ title: 'Completá los campos obligatorios', variant: 'destructive' });
+        return false;
+      }
+      if (step === 2 && !data.mainGoal) {
+        toast({ title: 'Elegí tu meta principal', variant: 'destructive' });
+        return false;
+      }
+      if (step === 7 && (!data.tutorName || !data.tutorEmail || !data.dataAuthorization || !data.termsAccepted)) {
+        toast({ title: 'Completá los datos del tutor y aceptá los términos', variant: 'destructive' });
+        return false;
+      }
     }
+
+    // Parent validations
+    if (role === 'parent') {
+      if (step === 1 && (!data.fullName || !data.parentRelationship)) {
+        toast({ title: 'Completá tu nombre y relación', variant: 'destructive' });
+        return false;
+      }
+      if (step === 4 && (!data.dataAuthorization || !data.termsAccepted)) {
+        toast({ title: 'Aceptá los términos para continuar', variant: 'destructive' });
+        return false;
+      }
+    }
+
+    // Coach validations
+    if (role === 'coach' || role === 'club_admin') {
+      if (step === 1 && !data.fullName) {
+        toast({ title: 'Ingresá tu nombre', variant: 'destructive' });
+        return false;
+      }
+      if (step === 2 && (!data.coachClubName || !data.mainSport)) {
+        toast({ title: 'Completá club y deporte', variant: 'destructive' });
+        return false;
+      }
+    }
+
+    // Admin validations
+    if (role === 'admin') {
+      if (step === 1 && !data.fullName) {
+        toast({ title: 'Ingresá tu nombre', variant: 'destructive' });
+        return false;
+      }
+      if (step === 3 && !data.termsAccepted) {
+        toast({ title: 'Aceptá los términos para continuar', variant: 'destructive' });
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const handleNext = () => {
     if (!validateStep(currentStep)) return;
-    if (currentStep < TOTAL_STEPS) {
+    if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
       setShowCelebration(true);
       setTimeout(() => {
         completeOnboarding();
-        navigate('/dashboard');
+        navigate(getRedirectForRole(role));
       }, 3000);
     }
   };
 
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1: return <PersonalDataStep />;
-      case 2: return <ObjectivesStep />;
-      case 3: return <CalendarStep />;
-      case 4: return <PhysicalProfileStep />;
-      case 5: return <NutritionStep />;
-      case 6: return <MentalProfileStep />;
-      case 7: return <FamilyStep />;
-      case 8: return <PersonalizationStep />;
-      default: return null;
-    }
   };
 
   if (showCelebration) {
@@ -94,7 +185,7 @@ const OnboardingContent = () => {
         >
           <PartyPopper className="w-24 h-24 text-secondary mx-auto mb-6" />
           <h1 className="text-3xl font-bold mb-2">¡Felicitaciones! 🎉</h1>
-          <p className="text-muted-foreground">Tu perfil está listo. ¡Vamos a entrenar!</p>
+          <p className="text-muted-foreground">Tu perfil está listo. ¡Vamos!</p>
         </motion.div>
       </motion.div>
     );
@@ -102,32 +193,28 @@ const OnboardingContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
-      {/* Header */}
       <header className="p-4 flex items-center justify-center gap-3 border-b border-border/50">
         <img src={netiaLogo} alt="NETIA" className="h-8" />
         <div className="h-6 w-px bg-border/50" />
         <span className="text-sm font-medium text-muted-foreground">Configuración inicial</span>
       </header>
 
-      {/* Progress - with proper spacing */}
       <div className="bg-background/50 backdrop-blur-sm border-b border-border/30">
         <div className="max-w-3xl mx-auto">
-          <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+          <ProgressBar currentStep={currentStep} totalSteps={totalSteps} stepLabels={stepLabels} />
         </div>
       </div>
 
-      {/* Content - with top margin to prevent overlap */}
       <main className="flex-1 overflow-y-auto px-4 py-6 pb-28">
         <div className="max-w-lg mx-auto">
           <AnimatePresence mode="wait">
             <motion.div key={currentStep}>
-              {renderStep()}
+              {steps[currentStep - 1]?.component}
             </motion.div>
           </AnimatePresence>
         </div>
       </main>
 
-      {/* Navigation */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-lg border-t border-border">
         <div className="max-w-lg mx-auto flex gap-3">
           {currentStep > 1 && (
@@ -136,8 +223,8 @@ const OnboardingContent = () => {
             </Button>
           )}
           <Button onClick={handleNext} className="flex-1 h-12 gradient-netia text-white border-0">
-            {currentStep === TOTAL_STEPS ? '¡Finalizar!' : 'Siguiente'}
-            {currentStep < TOTAL_STEPS && <ChevronRight className="w-4 h-4 ml-2" />}
+            {currentStep === totalSteps ? '¡Finalizar!' : 'Siguiente'}
+            {currentStep < totalSteps && <ChevronRight className="w-4 h-4 ml-2" />}
           </Button>
         </div>
       </div>

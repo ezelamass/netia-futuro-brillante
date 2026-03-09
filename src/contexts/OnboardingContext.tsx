@@ -3,11 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface OnboardingData {
+  // Shared
   fullName: string;
   birthDate: string;
   country: string;
   city: string;
   language: string;
+  termsAccepted: boolean;
+  dataAuthorization: boolean;
+
+  // Player fields
   mainSport: string;
   level: string;
   laterality: string;
@@ -51,16 +56,38 @@ export interface OnboardingData {
   tutorEmail: string;
   tutorPhone: string;
   weeklyReports: boolean;
-  dataAuthorization: boolean;
-  termsAccepted: boolean;
   selectedAvatar: string;
   avatarNickname: string;
   communicationPreference: string;
   championChallenges: boolean;
+
+  // Parent fields
+  parentRelationship: string;
+  childrenEmails: string[];
+  parentTrainingAlerts: boolean;
+  parentMedicalAlerts: boolean;
+
+  // Coach fields
+  coachClubName: string;
+  coachClubCode: string;
+  coachSpecialty: string;
+  coachExperienceYears: number;
+  coachCertifications: string;
+  coachTeamSize: number;
+  coachAgeRange: string;
+  coachSeasonGoal: string;
+  coachReportFrequency: string;
+  coachWellnessAlerts: boolean;
+
+  // Admin fields
+  adminOrganization: string;
+  adminTimezone: string;
+  adminEmailNotifications: boolean;
 }
 
 const defaultOnboardingData: OnboardingData = {
   fullName: '', birthDate: '', country: '', city: '', language: 'es',
+  termsAccepted: false, dataAuthorization: false,
   mainSport: '', level: '', laterality: '', hasCoach: false, coachName: '',
   mainGoal: '', otherGoal: '', trainingDaysPerWeek: 3, averageDuration: 60,
   areasToImprove: [], championModeReminders: true,
@@ -74,9 +101,19 @@ const defaultOnboardingData: OnboardingData = {
   zahiaMealPlan: true, motivationLevel: 3, preCompetitionFeeling: '',
   concentrationHelpers: [], postTrainingRelaxation: true, romaWeeklyGoals: true,
   tutorName: '', tutorEmail: '', tutorPhone: '',
-  weeklyReports: true, dataAuthorization: false, termsAccepted: false,
-  selectedAvatar: 'tino', avatarNickname: '', communicationPreference: 'text',
-  championChallenges: true,
+  weeklyReports: true, selectedAvatar: 'tino', avatarNickname: '',
+  communicationPreference: 'text', championChallenges: true,
+  // Parent
+  parentRelationship: '', childrenEmails: [],
+  parentTrainingAlerts: true, parentMedicalAlerts: true,
+  // Coach
+  coachClubName: '', coachClubCode: '', coachSpecialty: '',
+  coachExperienceYears: 0, coachCertifications: '',
+  coachTeamSize: 0, coachAgeRange: '', coachSeasonGoal: '',
+  coachReportFrequency: 'weekly', coachWellnessAlerts: true,
+  // Admin
+  adminOrganization: '', adminTimezone: 'america_buenos_aires',
+  adminEmailNotifications: true,
 };
 
 interface OnboardingContextType {
@@ -163,16 +200,25 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const completeOnboarding = async () => {
     setHasCompletedOnboarding(true);
     if (user) {
+      const profileUpdate: Record<string, any> = {
+        onboarding_completed: true,
+        full_name: data.fullName || user.name,
+        city: data.city || null,
+        country: data.country || 'Argentina',
+      };
+
+      // Role-specific fields
+      if (user.role === 'player') {
+        profileUpdate.sport = data.mainSport || 'tenis';
+        profileUpdate.date_of_birth = data.birthDate || null;
+      } else if (user.role === 'coach' || user.role === 'club_admin') {
+        profileUpdate.club_name = data.coachClubName || null;
+        profileUpdate.sport = data.mainSport || null;
+      }
+
       await supabase
         .from('profiles')
-        .update({
-          onboarding_completed: true,
-          full_name: data.fullName || user.name,
-          city: data.city || null,
-          country: data.country || 'Argentina',
-          sport: data.mainSport || 'tenis',
-          date_of_birth: data.birthDate || null,
-        })
+        .update(profileUpdate)
         .eq('id', user.id);
     } else {
       localStorage.setItem('netia_onboarding_completed', 'true');
