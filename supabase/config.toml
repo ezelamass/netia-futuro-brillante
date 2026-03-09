@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.avatar-rag-upload]
 verify_jwt = false
+
+[functions.whisper-transcribe]
+verify_jwt = false
