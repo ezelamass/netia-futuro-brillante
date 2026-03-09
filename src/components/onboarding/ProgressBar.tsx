@@ -5,9 +5,10 @@ import { cn } from '@/lib/utils';
 interface ProgressBarProps {
   currentStep: number;
   totalSteps: number;
+  stepLabels?: string[];
 }
 
-const stepLabels = [
+const defaultStepLabels = [
   'Datos',
   'Objetivos',
   'Calendario',
@@ -18,7 +19,7 @@ const stepLabels = [
   'Avatar',
 ];
 
-export const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
+export const ProgressBar = ({ currentStep, totalSteps, stepLabels = defaultStepLabels }: ProgressBarProps) => {
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
