@@ -22,7 +22,7 @@ export function TestResults({ open, onClose, axis, normalizedScore, testTitle }:
       <DialogContent className="sm:max-w-sm text-center">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-500" />
+            <CheckCircle2 className="w-5 h-5 text-primary" />
             Test Completado
           </DialogTitle>
         </DialogHeader>

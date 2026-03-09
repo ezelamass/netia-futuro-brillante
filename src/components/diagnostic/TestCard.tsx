@@ -27,7 +27,7 @@ export function TestCard({ test, lastCompletedAt, onStart }: TestCardProps) {
               </Badge>
             </div>
             {isCompleted && (
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
+              <CheckCircle2 className="w-5 h-5 text-primary" />
             )}
           </div>
 
