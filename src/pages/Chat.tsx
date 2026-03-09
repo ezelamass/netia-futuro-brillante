@@ -1,10 +1,9 @@
 import { AppLayout } from '@/layouts/AppLayout';
-import { useEffect, useMemo, useRef, useState, FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { EmptyState } from '@/components/ui/empty-state';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Send } from 'lucide-react';
 import tinoAvatar from '@/assets/tino-avatar.png';
 import zahiaAvatar from '@/assets/zahia-avatar.png';
 import romaAvatar from '@/assets/roma-avatar.png';
@@ -13,6 +12,7 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { MessageBubble } from '@/components/chat/MessageBubble';
 import { TypingIndicator } from '@/components/chat/TypingIndicator';
 import { ChatSkeleton } from '@/components/skeletons/ChatSkeleton';
+import { AIInput } from '@/components/ui/ai-input';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -289,24 +289,14 @@ const Chat = () => {
 
           {/* Input bar — always pinned at bottom */}
           <div className="border-t border-border/60 bg-background/95 px-3 py-2.5 backdrop-blur-sm">
-            <form onSubmit={handleSend} className="flex items-center gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="flex-1 rounded-full border border-border/60 bg-muted/50 px-4 py-2.5 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30"
-                placeholder={selectedAvatar ? `Escribí tu consulta para ${selectedAvatar}...` : 'Elegí un avatar para comenzar'}
-                disabled={!selectedAvatar || isSending}
-              />
-              <button
-                type="submit"
-                disabled={!inputValue.trim() || !selectedAvatar || isSending}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </form>
+            <AIInput
+              id="chat-input"
+              placeholder={selectedAvatar ? `Escribí tu consulta para ${selectedAvatar}...` : 'Elegí un avatar para comenzar'}
+              disabled={!selectedAvatar || isSending}
+              onSubmit={sendMessage}
+              minHeight={44}
+              maxHeight={160}
+            />
           </div>
         </div>
 
