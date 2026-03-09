@@ -93,7 +93,7 @@ function generateMockUsers(count: number): User[] {
       emailVerified: status !== 'pending' && Math.random() > 0.1,
       createdAt,
       lastLoginAt,
-      metrics: ['player', 'family'].includes(role) ? {
+      metrics: ['player', 'parent'].includes(role) ? {
         totalSessions: Math.floor(Math.random() * 200),
         activeDays: Math.floor(Math.random() * 100),
         currentStreak: Math.floor(Math.random() * 30),
