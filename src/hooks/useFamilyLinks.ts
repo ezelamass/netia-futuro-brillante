@@ -44,12 +44,11 @@ export const useFamilyLinks = () => {
   const linkChild = async (childEmail: string) => {
     if (!user) return false;
 
-    // Find the child's profile by email
-    const { data: childProfile, error: findError } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .eq('email', childEmail.trim().toLowerCase())
-      .maybeSingle();
+    // Use SECURITY DEFINER function to bypass RLS circular dependency
+    const { data: results, error: findError } = await supabase
+      .rpc('find_profile_by_email', { _email: childEmail.trim() });
+
+    const childProfile = Array.isArray(results) ? results[0] : results;
 
     if (findError || !childProfile) {
       toast.error('No se encontró una cuenta con ese email');
