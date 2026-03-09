@@ -195,7 +195,7 @@ export function ChangeRoleModal({
               className="w-full p-2 border rounded-md bg-background"
             >
               <option value="player">🎾 Jugador</option>
-              <option value="family">👨‍👩‍👧 Familia</option>
+              <option value="parent">👨‍👩‍👧 Familia</option>
               <option value="coach">🏫 Entrenador</option>
               <option value="club_admin">🏢 Admin Club</option>
               <option value="federation">🏛 Federación</option>

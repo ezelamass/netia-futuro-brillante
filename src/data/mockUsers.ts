@@ -32,13 +32,13 @@ function randomDate(start: Date, end: Date): Date {
 
 function generateMockUsers(count: number): User[] {
   const users: User[] = [];
-  const roles: UserRole[] = ['player', 'family', 'coach', 'club_admin', 'federation', 'government', 'admin'];
+  const roles: UserRole[] = ['player', 'parent', 'coach', 'club_admin', 'federation', 'government', 'admin'];
   const statuses: UserStatus[] = ['active', 'inactive', 'pending'];
   
   // Distribution weights: more players and families
   const roleWeights = {
     player: 0.55,
-    family: 0.25,
+    parent: 0.25,
     coach: 0.08,
     club_admin: 0.05,
     federation: 0.03,
