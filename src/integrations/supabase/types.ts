@@ -73,6 +73,36 @@ export type Database = {
           },
         ]
       }
+      badges: {
+        Row: {
+          category: string
+          description: string
+          icon: string
+          id: string
+          requirement: number
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          category?: string
+          description?: string
+          icon?: string
+          id: string
+          requirement?: number
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          description?: string
+          icon?: string
+          id?: string
+          requirement?: number
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           club_id: string | null
@@ -325,6 +355,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          avatar: string | null
+          created_at: string
+          description: string
+          id: string
+          is_read: boolean
+          metadata: Json | null
+          priority: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          avatar?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          priority?: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          avatar?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          priority?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      player_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       player_stats: {
         Row: {
