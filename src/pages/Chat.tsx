@@ -58,7 +58,6 @@ const Chat = () => {
   const [avatarToReset, setAvatarToReset] = useState<AvatarId | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const avatarOptions: AvatarPillAvatar[] = useMemo(() => [
     { id: 'TINO', name: 'TINO', image: tinoAvatar, accentClass: 'ring-tino' },
@@ -206,10 +205,6 @@ const Chat = () => {
     }
   };
 
-  const handleSend = (event: FormEvent) => {
-    event.preventDefault();
-    sendMessage(inputValue);
-  };
 
   const handleSuggestionClick = (suggestion: string) => {
     if (!selectedAvatar) {
