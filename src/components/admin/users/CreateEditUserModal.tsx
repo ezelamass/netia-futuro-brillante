@@ -26,7 +26,7 @@ const userSchema = z.object({
   fullName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Email inválido'),
   phone: z.string().optional(),
-  role: z.enum(['player', 'family', 'coach', 'club_admin', 'federation', 'government', 'admin']),
+  role: z.enum(['player', 'parent', 'coach', 'club_admin', 'federation', 'government', 'admin']),
   clubId: z.string().optional(),
   sendWelcomeEmail: z.boolean(),
   isActive: z.boolean(),

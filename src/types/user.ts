@@ -1,6 +1,6 @@
 export type UserRole = 
   | 'player' 
-  | 'family' 
+  | 'parent' 
   | 'coach' 
   | 'club_admin' 
   | 'federation' 
@@ -51,7 +51,7 @@ export interface UserFilters {
 export const ROLE_OPTIONS: { value: UserRole | 'all'; label: string; icon: string }[] = [
   { value: 'all', label: 'Todos los roles', icon: '👥' },
   { value: 'player', label: 'Jugador', icon: '🎾' },
-  { value: 'family', label: 'Familia', icon: '👨‍👩‍👧' },
+  { value: 'parent', label: 'Familia', icon: '👨‍👩‍👧' },
   { value: 'coach', label: 'Entrenador', icon: '🏫' },
   { value: 'club_admin', label: 'Admin Club', icon: '🏢' },
   { value: 'federation', label: 'Federación', icon: '🏛' },
@@ -68,7 +68,7 @@ export const STATUS_OPTIONS: { value: UserStatus | 'all'; label: string }[] = [
 
 export const ROLE_LABELS: Record<UserRole, { label: string; icon: string }> = {
   player: { label: 'Jugador', icon: '🎾' },
-  family: { label: 'Familia', icon: '👨‍👩‍👧' },
+  parent: { label: 'Familia', icon: '👨‍👩‍👧' },
   coach: { label: 'Entrenador', icon: '🏫' },
   club_admin: { label: 'Admin Club', icon: '🏢' },
   federation: { label: 'Federación', icon: '🏛' },

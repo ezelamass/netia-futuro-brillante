@@ -32,13 +32,13 @@ function randomDate(start: Date, end: Date): Date {
 
 function generateMockUsers(count: number): User[] {
   const users: User[] = [];
-  const roles: UserRole[] = ['player', 'family', 'coach', 'club_admin', 'federation', 'government', 'admin'];
+  const roles: UserRole[] = ['player', 'parent', 'coach', 'club_admin', 'federation', 'government', 'admin'];
   const statuses: UserStatus[] = ['active', 'inactive', 'pending'];
   
   // Distribution weights: more players and families
   const roleWeights = {
     player: 0.55,
-    family: 0.25,
+    parent: 0.25,
     coach: 0.08,
     club_admin: 0.05,
     federation: 0.03,
@@ -93,7 +93,7 @@ function generateMockUsers(count: number): User[] {
       emailVerified: status !== 'pending' && Math.random() > 0.1,
       createdAt,
       lastLoginAt,
-      metrics: ['player', 'family'].includes(role) ? {
+      metrics: ['player', 'parent'].includes(role) ? {
         totalSessions: Math.floor(Math.random() * 200),
         activeDays: Math.floor(Math.random() * 100),
         currentStreak: Math.floor(Math.random() * 30),

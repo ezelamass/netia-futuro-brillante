@@ -37,6 +37,7 @@ const Users = () => {
     totalPages,
     itemsPerPage,
     clubs,
+    isLoading,
     getUserActivities,
     createUser,
     updateUser,
@@ -45,6 +46,7 @@ const Users = () => {
     bulkUpdateStatus,
     bulkAssignClub,
     changeUserRole,
+    resetPassword,
   } = useUsers();
 
   // Modal states
@@ -60,9 +62,10 @@ const Users = () => {
   const [bulkAssignClubOpen, setBulkAssignClubOpen] = useState(false);
 
   // Handlers
-  const handleViewUser = (user: User) => {
+  const handleViewUser = async (user: User) => {
     setViewingUser(user);
-    setViewingUserActivities(getUserActivities(user.id));
+    const activities = await getUserActivities(user.id);
+    setViewingUserActivities(activities);
   };
 
   const handleEditUser = (user: User) => {
@@ -75,7 +78,7 @@ const Users = () => {
     setCreateModalOpen(true);
   };
 
-  const handleSaveUser = (data: {
+  const handleSaveUser = async (data: {
     fullName: string;
     email: string;
     phone?: string;
@@ -83,29 +86,24 @@ const Users = () => {
     clubId?: string;
     isActive: boolean;
   }) => {
-    const club = clubs.find((c) => c.id === data.clubId);
-
     if (editingUser) {
-      updateUser(editingUser.id, {
+      await updateUser(editingUser.id, {
         fullName: data.fullName,
         email: data.email,
         phone: data.phone,
         role: data.role,
         clubId: data.clubId,
-        clubName: club?.name,
         status: data.isActive ? 'active' : 'inactive',
       });
       toast.success('Usuario actualizado');
     } else {
-      createUser({
+      await createUser({
         fullName: data.fullName,
         email: data.email,
         phone: data.phone,
         role: data.role,
         clubId: data.clubId,
-        clubName: club?.name,
         status: data.isActive ? 'active' : 'pending',
-        lastLoginAt: undefined,
       });
       toast.success('Usuario creado');
     }
@@ -132,32 +130,33 @@ const Users = () => {
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (deletingUser) {
-      deleteUser(deletingUser.id);
+      await deleteUser(deletingUser.id);
       toast.success('Usuario eliminado');
       setDeletingUser(null);
     }
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (resettingPasswordUser) {
+      await resetPassword(resettingPasswordUser.email);
       toast.success(`Email de reseteo enviado a ${resettingPasswordUser.email}`);
       setResettingPasswordUser(null);
     }
   };
 
-  const handleChangeRole = (role: UserRole) => {
+  const handleChangeRole = async (role: UserRole) => {
     if (changingRoleUser) {
-      changeUserRole(changingRoleUser.id, role);
+      await changeUserRole(changingRoleUser.id, role);
       toast.success('Rol actualizado');
       setChangingRoleUser(null);
     }
   };
 
-  const handleAssignClub = (clubId: string, clubName: string) => {
+  const handleAssignClub = async (clubId: string, clubName: string) => {
     if (assigningClubUser) {
-      updateUser(assigningClubUser.id, { clubId, clubName });
+      await updateUser(assigningClubUser.id, { clubId, clubName });
       toast.success(`Usuario asignado a ${clubName}`);
       setAssigningClubUser(null);
     }
@@ -175,7 +174,7 @@ const Users = () => {
   };
 
   const handleExport = () => {
-    const headers = ['ID', 'Nombre', 'Email', 'Rol', 'Club', 'Estado', 'Fecha registro', 'Último login'];
+    const headers = ['ID', 'Nombre', 'Email', 'Rol', 'Club', 'Estado', 'Fecha registro'];
     const rows = filteredUsers.map((u) => [
       u.id,
       u.fullName,
@@ -184,7 +183,6 @@ const Users = () => {
       u.clubName || '-',
       u.status,
       u.createdAt.toISOString().split('T')[0],
-      u.lastLoginAt?.toISOString().split('T')[0] || '-',
     ]);
 
     const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
