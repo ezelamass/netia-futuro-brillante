@@ -1,12 +1,16 @@
 import { cn } from '@/lib/utils';
-import { RotateCcw } from 'lucide-react';
+import { History, RotateCcw } from 'lucide-react';
 import type { AvatarId } from './AvatarPill';
 
 interface ChatHeaderProps {
   avatar: AvatarId;
   avatarImage: string;
   onNewChat: () => void;
+  onOpenHistory: () => void;
   disabled?: boolean;
+  atLimit?: boolean;
+  totalCount: number;
+  maxCount: number;
 }
 
 const AVATAR_META: Record<AvatarId, { tagline: string; accentBorder: string; accentBg: string }> = {
@@ -15,7 +19,9 @@ const AVATAR_META: Record<AvatarId, { tagline: string; accentBorder: string; acc
   ROMA: { tagline: 'Tu mentor mental', accentBorder: 'border-roma/30', accentBg: 'bg-roma/5' },
 };
 
-export const ChatHeader = ({ avatar, avatarImage, onNewChat, disabled }: ChatHeaderProps) => {
+export const ChatHeader = ({
+  avatar, avatarImage, onNewChat, onOpenHistory, disabled, atLimit, totalCount, maxCount,
+}: ChatHeaderProps) => {
   const meta = AVATAR_META[avatar];
 
   return (
@@ -32,15 +38,27 @@ export const ChatHeader = ({ avatar, avatarImage, onNewChat, disabled }: ChatHea
           <p className="text-xs text-muted-foreground truncate">{meta.tagline}</p>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={onNewChat}
-        disabled={disabled}
-        className="flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-      >
-        <RotateCcw className="h-3 w-3" />
-        Nuevo chat
-      </button>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={onOpenHistory}
+          className="flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-2.5 py-1.5 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <History className="h-3.5 w-3.5" />
+          <span className={cn(atLimit && "text-destructive font-semibold")}>
+            {totalCount}/{maxCount}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={onNewChat}
+          disabled={disabled}
+          className="flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          <RotateCcw className="h-3 w-3" />
+          Nuevo chat
+        </button>
+      </div>
     </div>
   );
 };
