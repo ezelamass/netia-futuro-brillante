@@ -131,8 +131,8 @@ export const useNotifications = (): UseNotificationsReturn => {
         avatar: notification.avatar || null,
         action_url: notification.actionUrl || null,
         priority: notification.priority,
-        metadata: notification.metadata || {},
-      })
+        metadata: (notification.metadata || {}) as any,
+      } as any)
       .select()
       .single();
 
