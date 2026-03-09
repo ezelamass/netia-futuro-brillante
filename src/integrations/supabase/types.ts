@@ -249,6 +249,213 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnostic_history: {
+        Row: {
+          axis: string
+          detail: string | null
+          id: string
+          recorded_at: string
+          score: number
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          axis: string
+          detail?: string | null
+          id?: string
+          recorded_at?: string
+          score?: number
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          axis?: string
+          detail?: string | null
+          id?: string
+          recorded_at?: string
+          score?: number
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_history_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_questions: {
+        Row: {
+          created_at: string
+          id: string
+          options: Json | null
+          order_index: number
+          question_text: string
+          question_type: string
+          test_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          options?: Json | null
+          order_index?: number
+          question_text: string
+          question_type?: string
+          test_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          options?: Json | null
+          order_index?: number
+          question_text?: string
+          question_type?: string
+          test_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_questions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_responses: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string
+          response_value: string | null
+          score: number | null
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: string
+          response_value?: string | null
+          score?: number | null
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string
+          response_value?: string | null
+          score?: number | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_responses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_sessions: {
+        Row: {
+          axis: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          max_score: number | null
+          normalized_score: number | null
+          notes: string | null
+          started_at: string
+          test_id: string
+          total_score: number | null
+          user_id: string
+        }
+        Insert: {
+          axis: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          max_score?: number | null
+          normalized_score?: number | null
+          notes?: string | null
+          started_at?: string
+          test_id: string
+          total_score?: number | null
+          user_id: string
+        }
+        Update: {
+          axis?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          max_score?: number | null
+          normalized_score?: number | null
+          notes?: string | null
+          started_at?: string
+          test_id?: string
+          total_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_sessions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_tests: {
+        Row: {
+          axis: string
+          created_at: string
+          description: string | null
+          estimated_minutes: number
+          id: string
+          is_active: boolean
+          question_count: number
+          sport: string | null
+          title: string
+        }
+        Insert: {
+          axis: string
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number
+          id?: string
+          is_active?: boolean
+          question_count?: number
+          sport?: string | null
+          title: string
+        }
+        Update: {
+          axis?: string
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number
+          id?: string
+          is_active?: boolean
+          question_count?: number
+          sport?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           club_id: string
