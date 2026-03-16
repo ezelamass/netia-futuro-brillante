@@ -5,7 +5,7 @@ import { Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLatestDiagnosticScores } from '@/hooks/useDiagnostic';
-import { DiagnosticAxis as DiagAxisType } from '@/data/mockTrainingPlan';
+import { DiagnosticAxis as DiagAxisType } from '@/hooks/useTrainingPlan';
 
 interface DiagnosticRadarProps {
   diagnostic: DiagAxisType[];

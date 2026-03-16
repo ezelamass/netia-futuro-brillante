@@ -1,4 +1,4 @@
-import { ComplianceData } from '@/data/mockTrainingPlan';
+import { ComplianceData } from '@/hooks/useTrainingPlan';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { Flame, TrendingUp } from 'lucide-react';

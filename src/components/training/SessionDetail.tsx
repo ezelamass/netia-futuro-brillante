@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DaySession, ExerciseBlock } from '@/data/mockTrainingPlan';
+import { DaySession, ExerciseBlock } from '@/hooks/useTrainingPlan';
 import { SESSION_TYPE_LABELS, RPE_LABELS, SessionType } from '@/types/training';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
