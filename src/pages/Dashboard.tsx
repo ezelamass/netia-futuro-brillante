@@ -9,8 +9,21 @@ import { EvolutionWidget } from '@/components/dashboard/EvolutionWidget';
 import { GamificationWidget } from '@/components/dashboard/GamificationWidget';
 import { JoinClubModal } from '@/components/enrollment/JoinClubModal';
 import { EnrollmentsList } from '@/components/enrollment/EnrollmentsList';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { CardSkeleton } from '@/components/skeletons';
 
 const Dashboard = () => {
+  const { profile, stats, health, weeklyCompliance, diagnosticScores, isLoading } = useDashboardData();
+
+  const userName = profile?.fullName?.split(' ')[0] || 'Deportista';
+  const sport = profile?.sport || 'Deporte';
+  const age = profile?.age || 0;
+  const streak = stats?.streak || 0;
+
+  const sleepFormatted = health
+    ? `${Math.floor(health.sleepHours)}h ${Math.round((health.sleepHours % 1) * 60)}m`
+    : '—';
+
   return (
     <AppLayout>
       {/* Hero - Today Card */}
@@ -29,58 +42,79 @@ const Dashboard = () => {
       {/* Gamification + Progress Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <GamificationWidget delay={0.05} />
-        <ProgressWidget
-          userName="Mateo"
-          sport="Fútbol"
-          age={12}
-          streak={8}
-          weeklyCompliance={88}
-          delay={0.1}
-        />
+        {isLoading ? (
+          <CardSkeleton />
+        ) : (
+          <ProgressWidget
+            userName={userName}
+            sport={sport}
+            age={age}
+            streak={streak}
+            weeklyCompliance={weeklyCompliance}
+            delay={0.1}
+          />
+        )}
       </div>
 
       {/* Second Row - Health and Sailing */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <HealthWidget
-          hydration={2.4}
-          sleep="8h 10m"
-          recovery="optimal"
-          delay={0.2}
-        />
+        {isLoading ? (
+          <CardSkeleton />
+        ) : (
+          <HealthWidget
+            hydration={health?.hydration ?? 0}
+            sleep={sleepFormatted}
+            recovery={health?.recovery ?? 'optimal'}
+            delay={0.2}
+          />
+        )}
         <SailingCalendarWidget
-          hoursNavigated={6.5}
-          averageSpeed={4.3}
-          windDirection="NW"
-          windSpeed={12}
-          successfulManeuvers={8}
+          hoursNavigated={0}
+          averageSpeed={0}
+          windDirection="—"
+          windSpeed={0}
+          successfulManeuvers={0}
           delay={0.25}
         />
       </div>
 
       {/* Third Row - Technique and Physical */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <TechniqueWidget
-          correctDecisions={76}
-          concentration={8.5}
-          reactionTime={0.58}
-          delay={0.3}
-        />
-        <PhysicalTrainingWidget
-          maxSpeed={27}
-          resistance={3}
-          attendance={{ completed: 3, total: 3 }}
-          delay={0.35}
-        />
+        {isLoading ? (
+          <>
+            <CardSkeleton />
+            <CardSkeleton />
+          </>
+        ) : (
+          <>
+            <TechniqueWidget
+              correctDecisions={diagnosticScores.technique > 0 ? Math.round(diagnosticScores.technique * 10) : 0}
+              concentration={diagnosticScores.mental > 0 ? diagnosticScores.mental : 0}
+              reactionTime={0}
+              delay={0.3}
+            />
+            <PhysicalTrainingWidget
+              maxSpeed={0}
+              resistance={diagnosticScores.physical > 0 ? Math.min(5, Math.round(diagnosticScores.physical / 2)) : 0}
+              attendance={{ completed: stats?.totalLogs ?? 0, total: 7 }}
+              delay={0.35}
+            />
+          </>
+        )}
       </div>
 
       {/* Evolution */}
       <div className="grid grid-cols-1 gap-6 mb-6">
-        <EvolutionWidget
-          physical={8}
-          technique={5}
-          mental={3}
-          delay={0.4}
-        />
+        {isLoading ? (
+          <CardSkeleton />
+        ) : (
+          <EvolutionWidget
+            physical={diagnosticScores.physical}
+            technique={diagnosticScores.technique}
+            mental={diagnosticScores.mental}
+            delay={0.4}
+          />
+        )}
       </div>
     </AppLayout>
   );

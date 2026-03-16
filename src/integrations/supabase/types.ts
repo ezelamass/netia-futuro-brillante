@@ -201,6 +201,41 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_notes: {
+        Row: {
+          club_id: string
+          coach_id: string
+          content: string
+          created_at: string
+          id: string
+          player_id: string
+        }
+        Insert: {
+          club_id: string
+          coach_id: string
+          content: string
+          created_at?: string
+          id?: string
+          player_id: string
+        }
+        Update: {
+          club_id?: string
+          coach_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_notes_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_logs: {
         Row: {
           created_at: string
@@ -673,6 +708,42 @@ export type Database = {
         }
         Relationships: []
       }
+      prizes: {
+        Row: {
+          created_at: string
+          description: string
+          details: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          sponsor: string | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          details?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          sponsor?: string | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          details?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          sponsor?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -801,6 +872,204 @@ export type Database = {
           metadata?: Json | null
         }
         Relationships: []
+      }
+      session_attendance: {
+        Row: {
+          created_at: string
+          id: string
+          player_id: string
+          session_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_id: string
+          session_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_id?: string
+          session_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_plan_sessions: {
+        Row: {
+          created_at: string
+          day_index: number
+          day_label: string
+          duration_min: number
+          exercises: Json | null
+          id: string
+          intensity: string
+          notes: string | null
+          plan_id: string
+          rpe: number | null
+          session_type: string
+          status: string
+          title: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_index?: number
+          day_label?: string
+          duration_min?: number
+          exercises?: Json | null
+          id?: string
+          intensity?: string
+          notes?: string | null
+          plan_id: string
+          rpe?: number | null
+          session_type?: string
+          status?: string
+          title?: string
+          week_number?: number
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          day_label?: string
+          duration_min?: number
+          exercises?: Json | null
+          id?: string
+          intensity?: string
+          notes?: string | null
+          plan_id?: string
+          rpe?: number | null
+          session_type?: string
+          status?: string
+          title?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_plan_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_plans: {
+        Row: {
+          category: string
+          coach_id: string | null
+          created_at: string
+          current_stage: string
+          current_week: number
+          cycle_name: string
+          end_date: string | null
+          id: string
+          objective: string | null
+          sport: string
+          start_date: string | null
+          total_weeks: number
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          coach_id?: string | null
+          created_at?: string
+          current_stage?: string
+          current_week?: number
+          cycle_name?: string
+          end_date?: string | null
+          id?: string
+          objective?: string | null
+          sport?: string
+          start_date?: string | null
+          total_weeks?: number
+          user_id: string
+        }
+        Update: {
+          category?: string
+          coach_id?: string | null
+          created_at?: string
+          current_stage?: string
+          current_week?: number
+          cycle_name?: string
+          end_date?: string | null
+          id?: string
+          objective?: string | null
+          sport?: string
+          start_date?: string | null
+          total_weeks?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      training_sessions: {
+        Row: {
+          category: string
+          club_id: string
+          coach_id: string
+          cooldown_done: boolean
+          created_at: string
+          date: string
+          duration_min: number
+          group_name: string
+          id: string
+          notes: string | null
+          rpe_group: number
+          sport: string
+          type: string
+          warmup_done: boolean
+        }
+        Insert: {
+          category?: string
+          club_id: string
+          coach_id: string
+          cooldown_done?: boolean
+          created_at?: string
+          date: string
+          duration_min?: number
+          group_name?: string
+          id?: string
+          notes?: string | null
+          rpe_group?: number
+          sport?: string
+          type?: string
+          warmup_done?: boolean
+        }
+        Update: {
+          category?: string
+          club_id?: string
+          coach_id?: string
+          cooldown_done?: boolean
+          created_at?: string
+          date?: string
+          duration_min?: number
+          group_name?: string
+          id?: string
+          notes?: string | null
+          rpe_group?: number
+          sport?: string
+          type?: string
+          warmup_done?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_sessions_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

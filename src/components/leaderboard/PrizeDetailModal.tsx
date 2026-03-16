@@ -8,7 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import type { Prize } from '@/data/mockPrizes';
+import type { Prize } from '@/hooks/usePrizes';
 
 interface PrizeDetailModalProps {
   prize: Prize | null;

@@ -1,98 +1,29 @@
-import { SessionType } from '@/types/training';
+import type {
+  TrainingPlan,
+  TrainingStage,
+  StageInfo,
+  DiagnosticAxis,
+  DaySession,
+  ExerciseBlock,
+  CycleObjective,
+  ComplianceData,
+  LoadRecoveryData,
+} from '@/hooks/useTrainingPlan';
+import { TRAINING_STAGES } from '@/hooks/useTrainingPlan';
 
-export type TrainingStage = 
-  | 'profiling' 
-  | 'diagnostic' 
-  | 'objective' 
-  | 'design' 
-  | 'validation' 
-  | 'implementation' 
-  | 'monitoring';
-
-export interface StageInfo {
-  key: TrainingStage;
-  label: string;
-  shortLabel: string;
-  description: string;
-}
-
-export const TRAINING_STAGES: StageInfo[] = [
-  { key: 'profiling', label: 'Perfilado', shortLabel: '1', description: 'Recopilación de datos del deportista' },
-  { key: 'diagnostic', label: 'Diagnóstico', shortLabel: '2', description: 'Evaluación del estado actual' },
-  { key: 'objective', label: 'Objetivo', shortLabel: '3', description: 'Definición de metas del ciclo' },
-  { key: 'design', label: 'Diseño', shortLabel: '4', description: 'Planificación del mesociclo' },
-  { key: 'validation', label: 'Validación', shortLabel: '5', description: 'Revisión del entrenador' },
-  { key: 'implementation', label: 'Implementación', shortLabel: '6', description: 'Ejecución del plan' },
-  { key: 'monitoring', label: 'Seguimiento', shortLabel: '7', description: 'Control y ajuste continuo' },
-];
-
-export interface DiagnosticAxis {
-  axis: string;
-  score: number;
-  maxScore: number;
-  detail: string;
-}
-
-export interface DaySession {
-  dayIndex: number; // 0=Mon, 6=Sun
-  dayLabel: string;
-  type: SessionType | 'rest';
-  title: string;
-  duration: number; // minutes, 0 for rest
-  targetRPE: number;
-  status: 'completed' | 'today' | 'upcoming' | 'rest';
-  rpeLogged?: number;
-  exercises: ExerciseBlock[];
-}
-
-export interface ExerciseBlock {
-  phase: 'warmup' | 'main' | 'cooldown';
-  name: string;
-  sets?: string;
-  duration?: string;
-  notes?: string;
-}
-
-export interface CycleObjective {
-  main: string;
-  secondary: string[];
-  progress: number; // 0-100
-}
-
-export interface ComplianceData {
-  completedSessions: number;
-  totalSessions: number;
-  currentStreak: number;
-  longestStreak: number;
-  weeklyTrend: number[]; // last 4 weeks compliance %
-}
-
-export interface LoadRecoveryData {
-  acuteLoad: number;
-  chronicLoad: number;
-  ratio: number;
-  status: 'green' | 'yellow' | 'red';
-  fatigueLevel: number; // 1-10
-  energyLevel: number; // 1-10
-}
-
-export interface TrainingPlan {
-  id: string;
-  cycleName: string;
-  cycleNumber: number;
-  startDate: string;
-  endDate: string;
-  currentStage: TrainingStage;
-  currentWeek: number;
-  totalWeeks: number;
-  sport: string;
-  category: string;
-  diagnostic: DiagnosticAxis[];
-  objective: CycleObjective;
-  weekSessions: DaySession[];
-  compliance: ComplianceData;
-  loadRecovery: LoadRecoveryData;
-}
+// Re-export types for backwards compatibility
+export type {
+  TrainingStage,
+  StageInfo,
+  DiagnosticAxis,
+  DaySession,
+  ExerciseBlock,
+  CycleObjective,
+  ComplianceData,
+  LoadRecoveryData,
+  TrainingPlan,
+};
+export { TRAINING_STAGES };
 
 // ---- Mock Data ----
 

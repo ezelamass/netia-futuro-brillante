@@ -1,4 +1,4 @@
-import { DaySession } from '@/data/mockTrainingPlan';
+import { DaySession } from '@/hooks/useTrainingPlan';
 import { SESSION_TYPE_COLORS, SESSION_TYPE_LABELS, SessionType } from '@/types/training';
 import { cn } from '@/lib/utils';
 import { Check, Moon, Zap, Crosshair, Dumbbell, Swords, Heart } from 'lucide-react';

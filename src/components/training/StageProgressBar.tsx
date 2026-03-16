@@ -1,4 +1,4 @@
-import { TRAINING_STAGES, TrainingStage } from '@/data/mockTrainingPlan';
+import { TRAINING_STAGES, TrainingStage } from '@/hooks/useTrainingPlan';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { motion } from 'framer-motion';

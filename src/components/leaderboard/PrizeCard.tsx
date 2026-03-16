@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Prize } from '@/data/mockPrizes';
+import type { Prize } from '@/hooks/usePrizes';
 
 interface PrizeCardProps {
   position: 1 | 2 | 3;
