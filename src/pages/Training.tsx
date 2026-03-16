@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { AppLayout } from '@/layouts/AppLayout';
+import { useTrainingPlan, TRAINING_STAGES } from '@/hooks/useTrainingPlan';
+import type { TrainingPlan } from '@/hooks/useTrainingPlan';
 import { mockTrainingPlan } from '@/data/mockTrainingPlan';
 import {
   StageProgressBar,
@@ -12,13 +14,30 @@ import {
 } from '@/components/training';
 import { Dumbbell } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { CardSkeleton } from '@/components/skeletons';
 
 const Training = () => {
-  const plan = mockTrainingPlan;
+  const { plan: realPlan, isLoading } = useTrainingPlan();
+
+  // Use real plan if available, otherwise fallback to mock for display
+  const plan = realPlan || mockTrainingPlan;
+
   const todayIndex = plan.weekSessions.find(s => s.status === 'today')?.dayIndex ?? 3;
   const [selectedDay, setSelectedDay] = useState<number>(todayIndex);
 
-  const selectedSession = plan.weekSessions.find(s => s.dayIndex === selectedDay)!;
+  const selectedSession = plan.weekSessions.find(s => s.dayIndex === selectedDay) || plan.weekSessions[0];
+
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="space-y-6 pb-8">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -58,14 +77,16 @@ const Training = () => {
         </div>
 
         {/* Weekly Microcycle */}
-        <WeeklyMicrocycle
-          sessions={plan.weekSessions}
-          onSelectDay={setSelectedDay}
-          selectedDay={selectedDay}
-        />
-
-        {/* Session Detail */}
-        <SessionDetail session={selectedSession} />
+        {plan.weekSessions.length > 0 && (
+          <>
+            <WeeklyMicrocycle
+              sessions={plan.weekSessions}
+              onSelectDay={setSelectedDay}
+              selectedDay={selectedDay}
+            />
+            {selectedSession && <SessionDetail session={selectedSession} />}
+          </>
+        )}
 
         {/* Compliance + Load Recovery */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

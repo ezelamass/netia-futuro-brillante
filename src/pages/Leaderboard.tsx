@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ListSkeleton } from '@/components/skeletons';
 import { useNavigate } from 'react-router-dom';
 import { PodiumCard, PrizeCard, PrizeDetailModal } from '@/components/leaderboard';
-import { mockPrizes, getTimeRemaining, type Prize } from '@/data/mockPrizes';
+import { usePrizes, getTimeRemaining, type Prize } from '@/hooks/usePrizes';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { LevelBadge } from '@/components/gamification';
 import confetti from 'canvas-confetti';
@@ -16,6 +16,7 @@ import confetti from 'canvas-confetti';
 const Leaderboard = () => {
   const navigate = useNavigate();
   const { entries, isLoading, currentUserEntry } = useLeaderboard();
+  const { prizes, isLoading: prizesLoading } = usePrizes();
   const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
   const [selectedPrize, setSelectedPrize] = useState<{ prize: Prize; position: 1 | 2 | 3 } | null>(null);
   const [hasTriggeredConfetti, setHasTriggeredConfetti] = useState(false);
@@ -171,23 +172,25 @@ const Leaderboard = () => {
             </Card>
 
             {/* Prizes */}
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-              <div className="flex items-center gap-2 mb-4">
-                <Gift className="w-5 h-5 text-secondary" />
-                <h2 className="text-xl font-bold">Premios del Podio</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {mockPrizes.map((prize, index) => (
-                  <PrizeCard
-                    key={prize.id}
-                    position={(index + 1) as 1 | 2 | 3}
-                    prize={prize}
-                    delay={0.7 + index * 0.1}
-                    onClick={() => setSelectedPrize({ prize, position: (index + 1) as 1 | 2 | 3 })}
-                  />
-                ))}
-              </div>
-            </motion.div>
+            {prizes.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <Gift className="w-5 h-5 text-secondary" />
+                  <h2 className="text-xl font-bold">Premios del Podio</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {prizes.map((prize, index) => (
+                    <PrizeCard
+                      key={prize.id}
+                      position={(index + 1) as 1 | 2 | 3}
+                      prize={prize}
+                      delay={0.7 + index * 0.1}
+                      onClick={() => setSelectedPrize({ prize, position: (index + 1) as 1 | 2 | 3 })}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </>
         )}
 
