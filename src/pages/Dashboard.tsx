@@ -9,6 +9,7 @@ import { EvolutionWidget } from '@/components/dashboard/EvolutionWidget';
 import { GamificationWidget } from '@/components/dashboard/GamificationWidget';
 import { JoinClubModal } from '@/components/enrollment/JoinClubModal';
 import { EnrollmentsList } from '@/components/enrollment/EnrollmentsList';
+import { AvatarMessageWidget } from '@/components/dashboard/AvatarMessageWidget';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { CardSkeleton } from '@/components/skeletons';
 
