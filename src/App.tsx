@@ -24,6 +24,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Achievements from "./pages/Achievements";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
+import OnboardingResult from "./pages/OnboardingResult";
 
 // Parent pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
