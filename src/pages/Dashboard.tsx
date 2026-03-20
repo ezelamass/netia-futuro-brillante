@@ -32,6 +32,15 @@ const Dashboard = () => {
         <TodayCard />
       </div>
 
+      {/* Avatar Message */}
+      <div className="mb-6">
+        <AvatarMessageWidget
+          streak={streak}
+          hasLogToday={!!health}
+          energyLevel={health?.energyLevel ?? null}
+        />
+      </div>
+
       {/* Club Enrollment */}
       <div className="mb-6 space-y-4">
         <div className="flex justify-end">

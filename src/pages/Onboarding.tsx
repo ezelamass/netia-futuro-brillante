@@ -167,26 +167,6 @@ const OnboardingContent = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  if (showCelebration) {
-    return (
-      <motion.div
-        className="fixed inset-0 flex flex-col items-center justify-center bg-background z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-          className="text-center"
-        >
-          <PartyPopper className="w-24 h-24 text-secondary mx-auto mb-6" />
-          <h1 className="text-3xl font-bold mb-2">¡Felicitaciones! 🎉</h1>
-          <p className="text-muted-foreground">Tu perfil está listo. ¡Vamos!</p>
-        </motion.div>
-      </motion.div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">

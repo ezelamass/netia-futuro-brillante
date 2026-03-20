@@ -59,6 +59,7 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/onboarding-result" element={<RouteGuard allowedRoles={['player','parent','coach','club_admin','admin']}><OnboardingResult /></RouteGuard>} />
               <Route path="/register" element={<Register />} />
 
               {/* Player routes */}
