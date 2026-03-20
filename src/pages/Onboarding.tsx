@@ -153,16 +153,13 @@ const OnboardingContent = () => {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateStep(currentStep)) return;
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      setShowCelebration(true);
-      setTimeout(() => {
-        completeOnboarding();
-        navigate(getRedirectForRole(role));
-      }, 3000);
+      await completeOnboarding();
+      navigate('/onboarding-result');
     }
   };
 
