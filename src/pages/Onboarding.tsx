@@ -90,7 +90,7 @@ const OnboardingContent = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentStep, setCurrentStep, data, completeOnboarding } = useOnboarding();
-  const [showCelebration, setShowCelebration] = useState(false);
+  // celebration moved to OnboardingResult page
 
   const role = user?.role ?? 'player';
   const steps = useMemo(() => getStepsForRole(role), [role]);
