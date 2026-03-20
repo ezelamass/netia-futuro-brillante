@@ -24,6 +24,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Achievements from "./pages/Achievements";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
+import OnboardingResult from "./pages/OnboardingResult";
 
 // Parent pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/onboarding-result" element={<RouteGuard allowedRoles={['player','parent','coach','club_admin','admin']}><OnboardingResult /></RouteGuard>} />
               <Route path="/register" element={<Register />} />
 
               {/* Player routes */}

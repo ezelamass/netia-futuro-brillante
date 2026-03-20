@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOnboarding, OnboardingProvider } from '@/contexts/OnboardingContext';
@@ -24,7 +24,7 @@ import { AdminProfileStep } from '@/components/onboarding/steps/AdminProfileStep
 import { PlatformPrefsStep } from '@/components/onboarding/steps/PlatformPrefsStep';
 import { AdminConfirmationStep } from '@/components/onboarding/steps/AdminConfirmationStep';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import netiaLogo from '@/assets/netia-logo.png';
 import type { ReactNode } from 'react';
@@ -90,7 +90,7 @@ const OnboardingContent = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentStep, setCurrentStep, data, completeOnboarding } = useOnboarding();
-  const [showCelebration, setShowCelebration] = useState(false);
+  // celebration moved to OnboardingResult page
 
   const role = user?.role ?? 'player';
   const steps = useMemo(() => getStepsForRole(role), [role]);
@@ -153,16 +153,13 @@ const OnboardingContent = () => {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateStep(currentStep)) return;
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      setShowCelebration(true);
-      setTimeout(() => {
-        completeOnboarding();
-        navigate(getRedirectForRole(role));
-      }, 3000);
+      await completeOnboarding();
+      navigate('/onboarding-result');
     }
   };
 
@@ -170,26 +167,6 @@ const OnboardingContent = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  if (showCelebration) {
-    return (
-      <motion.div
-        className="fixed inset-0 flex flex-col items-center justify-center bg-background z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-          className="text-center"
-        >
-          <PartyPopper className="w-24 h-24 text-secondary mx-auto mb-6" />
-          <h1 className="text-3xl font-bold mb-2">¡Felicitaciones! 🎉</h1>
-          <p className="text-muted-foreground">Tu perfil está listo. ¡Vamos!</p>
-        </motion.div>
-      </motion.div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
