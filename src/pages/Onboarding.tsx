@@ -24,7 +24,7 @@ import { AdminProfileStep } from '@/components/onboarding/steps/AdminProfileStep
 import { PlatformPrefsStep } from '@/components/onboarding/steps/PlatformPrefsStep';
 import { AdminConfirmationStep } from '@/components/onboarding/steps/AdminConfirmationStep';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import netiaLogo from '@/assets/netia-logo.png';
 import type { ReactNode } from 'react';
