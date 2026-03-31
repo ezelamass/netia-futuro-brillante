@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { Lock, Mail, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const sportsQuotes = [
   "El único modo de hacer un gran trabajo es amar lo que haces - Steve Jobs",
@@ -37,6 +38,8 @@ const Register = () => {
   const [selectedRole, setSelectedRole] = useState<RegisterRole>('player');
   const [errors, setErrors] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [currentQuote, setCurrentQuote] = useState('');
   const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -181,27 +184,39 @@ const Register = () => {
               {errors.confirmPassword && <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-300 text-sm">{errors.confirmPassword}</motion.p>}
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-white font-medium">Soy...</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['player', 'parent', 'coach'] as RegisterRole[]).map((role) => (
-                  <motion.div key={role} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button type="button" variant={selectedRole === role ? 'default' : 'outline'}
-                      onClick={() => setSelectedRole(role)}
-                      className={`w-full transition-all rounded-xl ${
-                        selectedRole === role
-                          ? 'bg-white text-netia-blue hover:bg-white/90'
-                          : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
-                      }`}>
-                      {roleLabels[role]}
-                    </Button>
-                  </motion.div>
-                ))}
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="accept-terms"
+                  checked={acceptedTerms}
+                  onCheckedChange={v => setAcceptedTerms(v === true)}
+                  className="mt-0.5 border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-primary"
+                />
+                <label htmlFor="accept-terms" className="text-sm text-white/90 leading-relaxed cursor-pointer">
+                  Acepto los{' '}
+                  <a href="/TERMINOS_Y_CONDICIONES.pdf" target="_blank" rel="noopener noreferrer" download className="underline font-semibold text-white hover:text-white/80">
+                    Términos y Condiciones
+                  </a>
+                </label>
+              </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="accept-privacy"
+                  checked={acceptedPrivacy}
+                  onCheckedChange={v => setAcceptedPrivacy(v === true)}
+                  className="mt-0.5 border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-primary"
+                />
+                <label htmlFor="accept-privacy" className="text-sm text-white/90 leading-relaxed cursor-pointer">
+                  Acepto la{' '}
+                  <a href="/Politica_de_Privacidad_NETIA.pdf" target="_blank" rel="noopener noreferrer" download className="underline font-semibold text-white hover:text-white/80">
+                    Política de Privacidad
+                  </a>
+                </label>
               </div>
             </div>
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button type="submit" disabled={isLoading}
+              <Button type="submit" disabled={isLoading || !acceptedTerms || !acceptedPrivacy}
                 className="w-full bg-white text-netia-blue hover:bg-white/90 font-semibold h-12 rounded-xl text-base shadow-lg transition-all">
                 {isLoading ? (
                   <div className="flex items-center gap-2">
