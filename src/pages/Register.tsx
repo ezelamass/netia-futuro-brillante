@@ -38,6 +38,8 @@ const Register = () => {
   const [selectedRole, setSelectedRole] = useState<RegisterRole>('player');
   const [errors, setErrors] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [currentQuote, setCurrentQuote] = useState('');
   const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
