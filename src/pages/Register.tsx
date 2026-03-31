@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { Lock, Mail, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const sportsQuotes = [
   "El único modo de hacer un gran trabajo es amar lo que haces - Steve Jobs",
