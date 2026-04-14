@@ -8,7 +8,7 @@ import { useLessonPlayer } from '@/hooks/useLessonPlayer';
 import { useLessonQuiz } from '@/hooks/useLessonQuiz';
 import { useLessonNavigation } from '@/hooks/useLessonNavigation';
 import { useClassroomXP } from '@/hooks/useClassroomXP';
-import { VideoEmbed, LessonQuiz, ModuleCompletionDialog } from '@/components/classroom';
+import { VideoEmbed, LessonQuiz, ModuleCompletionDialog, LessonContent } from '@/components/classroom';
 
 const ClassroomLesson = () => {
   const { moduleId, lessonId } = useParams<{ moduleId: string; lessonId: string }>();
@@ -86,11 +86,7 @@ const ClassroomLesson = () => {
 
             {/* Text content */}
             {lesson.contentMd && (
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                {lesson.contentMd.split('\n').map((paragraph, i) => (
-                  paragraph.trim() ? <p key={i}>{paragraph}</p> : null
-                ))}
-              </div>
+              <LessonContent content={lesson.contentMd} />
             )}
 
             {/* Quiz */}
