@@ -105,10 +105,20 @@ export const useDailyLog = () => {
       .single();
 
     if (!error && data) {
-      // Update player_stats XP
+      // Re-count total logs for accurate XP (avoids stale state race condition)
       try {
-        await supabase.from('player_stats').update({ xp: logs.length * 10 + 10 }).eq('user_id', user.id);
-      } catch { /* ignore */ }
+        const { count } = await supabase
+          .from('daily_logs')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        const totalLogs = count ?? 0;
+        await supabase
+          .from('player_stats')
+          .update({ xp: totalLogs * 10, total_logs: totalLogs })
+          .eq('user_id', user.id);
+      } catch (e) {
+        console.error('Error updating XP:', e);
+      }
       fetchLogs();
     }
   };

@@ -21,7 +21,7 @@ const campusCards = [
 
 const CampusSection = () => {
   return (
-    <section id="campus" className="w-full py-16 lg:py-24 bg-white">
+    <section id="campus" className="w-full py-16 lg:py-24 bg-white" data-tour="campus">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">

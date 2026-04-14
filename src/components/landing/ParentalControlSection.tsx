@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const ParentalControlSection = () => {
   return (
-    <section className="w-full py-16 lg:py-24 bg-white">
+    <section className="w-full py-16 lg:py-24 bg-white" data-tour="parental">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
           {/* Left — Title + Seal */}

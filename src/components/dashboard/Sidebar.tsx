@@ -1,4 +1,4 @@
-import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, ChevronLeft, Award, Heart, LucideIcon } from 'lucide-react';
+import { Home, Dumbbell, Calendar, MessageCircle, Trophy, Building2, Users, FileText, Bell, Shield, UserCog, BarChart3, ChevronLeft, Award, Heart, GraduationCap, LucideIcon } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -30,6 +30,7 @@ const playerNav: NavItem[] = [
   { label: 'Chat IA', icon: MessageCircle, href: '/chat', badge: 3 },
   { label: 'Logros', icon: Award, href: '/achievements' },
   { label: 'Ranking', icon: Trophy, href: '/leaderboard' },
+  { label: 'Aula', icon: GraduationCap, href: '/classroom' },
 ];
 
 const parentNav: NavItem[] = [
@@ -44,11 +45,13 @@ const clubNav: NavItem[] = [
   { label: 'Carga de Entreno', icon: BarChart3, href: '/club/training-load' },
   { label: 'Informes', icon: FileText, href: '/club/reports' },
   { label: 'Comunicación', icon: Bell, href: '/club/communication' },
+  { label: 'Aula', icon: GraduationCap, href: '/classroom' },
 ];
 
 const adminNav: NavItem[] = [
   { label: 'Dashboard', icon: Shield, href: '/admin/dashboard' },
   { label: 'Usuarios', icon: UserCog, href: '/admin/users' },
+  { label: 'Cursos', icon: GraduationCap, href: '/admin/courses' },
   { label: 'Analíticas', icon: BarChart3, href: '/admin/analytics' },
 ];
 

@@ -17,19 +17,23 @@ export const useLeaderboard = () => {
   const { user } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentUserEntry, setCurrentUserEntry] = useState<LeaderboardEntry | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
       setIsLoading(true);
+      setError(null);
 
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('player_stats')
         .select('user_id, xp, current_streak, level')
         .order('xp', { ascending: false })
         .limit(50);
 
-      if (error || !data) {
+      if (fetchError || !data) {
+        console.error('Leaderboard fetch error:', fetchError);
+        setError('No se pudo cargar el ranking');
         setIsLoading(false);
         return;
       }
@@ -69,5 +73,5 @@ export const useLeaderboard = () => {
     fetch();
   }, [user]);
 
-  return { entries, isLoading, currentUserEntry };
+  return { entries, isLoading, error, currentUserEntry };
 };

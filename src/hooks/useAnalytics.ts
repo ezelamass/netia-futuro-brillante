@@ -205,7 +205,7 @@ export const useAnalytics = () => {
       data.push({
         date: dateStr,
         totalUsers,
-        activeUsers: Math.round(totalUsers * 0.8),
+        activeUsers: new Set(dailyLogs.filter(l => l.log_date >= sevenDaysAgo).map(l => l.user_id)).size,
         dau: dauSet.size,
         dailyLogs: dayLogs.length,
       });
@@ -279,25 +279,46 @@ export const useAnalytics = () => {
     ];
   }, [dailyLogs]);
 
-  // Sport metrics (from profiles)
+  // Sport metrics (from profiles + daily logs)
   const sportMetrics = useMemo<SportMetric[]>(() => {
-    const sportMap: Record<string, number> = {};
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+
+    // Build user→sport map
+    const userSportMap: Record<string, string> = {};
+    const sportUserCount: Record<string, number> = {};
     for (const p of profiles) {
       const sport = p.sport || 'Otro';
-      sportMap[sport] = (sportMap[sport] || 0) + 1;
+      userSportMap[p.id] = sport;
+      sportUserCount[sport] = (sportUserCount[sport] || 0) + 1;
     }
-    return Object.entries(sportMap)
+
+    // Aggregate daily logs per sport (last 7 days)
+    const sportLogs: Record<string, { sleepSum: number; count: number }> = {};
+    for (const l of dailyLogs) {
+      if (l.log_date < sevenDaysAgo) continue;
+      const sport = userSportMap[l.user_id] || 'Otro';
+      if (!sportLogs[sport]) sportLogs[sport] = { sleepSum: 0, count: 0 };
+      sportLogs[sport].sleepSum += l.sleep_hours ?? 0;
+      sportLogs[sport].count++;
+    }
+
+    return Object.entries(sportUserCount)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([sport, users]) => ({
-        sport,
-        users,
-        sessionsPerWeek: 0,
-        avgRPE: 0,
-        healthScore: 80,
-        healthStatus: 'green' as const,
-      }));
-  }, [profiles]);
+      .map(([sport, users]) => {
+        const sl = sportLogs[sport];
+        const avgSleep = sl && sl.count > 0 ? sl.sleepSum / sl.count : 0;
+        const healthScore = Math.round(Math.min(100, (avgSleep / 8) * 100));
+        return {
+          sport,
+          users,
+          sessionsPerWeek: sl?.count ?? 0,
+          avgRPE: 0,
+          healthScore,
+          healthStatus: (healthScore >= 70 ? 'green' : healthScore >= 50 ? 'yellow' : 'red') as 'green' | 'yellow' | 'red',
+        };
+      });
+  }, [profiles, dailyLogs]);
 
   // Category metrics (derived from age)
   const categoryMetrics = useMemo<CategoryMetric[]>(() => {
@@ -311,9 +332,25 @@ export const useAnalytics = () => {
 
   // Club metrics
   const clubMetrics = useMemo<ClubMetric[]>(() => {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+
+    // Map user→club(s) for log aggregation
+    const userClubMap: Record<string, string[]> = {};
     const clubEnrollmentCount: Record<string, number> = {};
     for (const e of enrollments) {
       clubEnrollmentCount[e.club_id] = (clubEnrollmentCount[e.club_id] || 0) + 1;
+      if (!userClubMap[e.user_id]) userClubMap[e.user_id] = [];
+      userClubMap[e.user_id].push(e.club_id);
+    }
+
+    // Count daily log entries per club (last 7 days)
+    const clubLogCount: Record<string, number> = {};
+    for (const l of dailyLogs) {
+      if (l.log_date < sevenDaysAgo) continue;
+      const clubIds = userClubMap[l.user_id] || [];
+      for (const cid of clubIds) {
+        clubLogCount[cid] = (clubLogCount[cid] || 0) + 1;
+      }
     }
 
     return clubs
@@ -321,12 +358,12 @@ export const useAnalytics = () => {
         id: c.id,
         name: c.name,
         users: clubEnrollmentCount[c.id] || 0,
-        sessionsPerWeek: 0,
+        sessionsPerWeek: clubLogCount[c.id] || 0,
         healthStatus: 'green' as const,
       }))
       .sort((a, b) => b.users - a.users)
       .slice(0, 5);
-  }, [clubs, enrollments]);
+  }, [clubs, enrollments, dailyLogs]);
 
   // Wellness trend (last 7 weeks)
   const wellnessTrend = useMemo<WellnessTrend[]>(() => {

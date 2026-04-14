@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, Play, Eye } from 'lucide-react';
 
 const navLinks = [
   { label: 'Nosotros', href: '#nosotros' },
@@ -10,7 +10,12 @@ const navLinks = [
   { label: 'Planes', href: '#planes' },
 ];
 
-const LandingNavbar = () => {
+interface LandingNavbarProps {
+  onDemoClick?: () => void;
+  onTourClick?: () => void;
+}
+
+const LandingNavbar = ({ onDemoClick, onTourClick }: LandingNavbarProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -36,12 +41,22 @@ const LandingNavbar = () => {
 
         {/* Right side */}
         <div className="hidden md:flex items-center gap-4">
-          <button
-            className="p-2 text-foreground hover:text-secondary transition-colors"
-            aria-label="Buscar"
+          <Button
+            variant="ghost"
+            className="rounded-full px-4 py-2 text-sm font-medium gap-1.5 text-muted-foreground hover:text-foreground"
+            onClick={onTourClick}
           >
-            <Search className="w-5 h-5" />
-          </button>
+            <Eye className="w-3.5 h-3.5" />
+            Ver Tour
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full px-5 py-2 text-sm font-medium gap-1.5 border-secondary text-secondary hover:bg-secondary/10"
+            onClick={onDemoClick}
+          >
+            <Play className="w-3.5 h-3.5" />
+            Probar Demo
+          </Button>
           <Link to="/register">
             <Button className="rounded-full px-6 py-2 text-[16px] font-medium">
               Inscribite
@@ -73,6 +88,14 @@ const LandingNavbar = () => {
                 {link.label}
               </a>
             ))}
+            <Button
+              variant="outline"
+              className="rounded-full w-full text-[16px] font-medium gap-2 border-secondary text-secondary"
+              onClick={() => { setMobileOpen(false); onDemoClick?.(); }}
+            >
+              <Play className="w-4 h-4" />
+              Probar Demo
+            </Button>
             <Link to="/register" onClick={() => setMobileOpen(false)}>
               <Button className="rounded-full w-full text-[16px] font-medium">
                 Inscribite

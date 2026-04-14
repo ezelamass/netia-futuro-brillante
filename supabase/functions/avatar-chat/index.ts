@@ -1,11 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 type AvatarId = "TINO" | "ZAHIA" | "ROMA";
 
@@ -240,7 +235,7 @@ async function getEmbedding(text: string, apiKey: string): Promise<number[]> {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -249,7 +244,7 @@ serve(async (req) => {
     if (!message || !avatar || !["TINO", "ZAHIA", "ROMA"].includes(avatar)) {
       return new Response(
         JSON.stringify({ error: "Invalid input. Required: message, avatar (TINO/ZAHIA/ROMA)" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -257,7 +252,7 @@ serve(async (req) => {
     if (!OPENAI_KEY) {
       return new Response(
         JSON.stringify({ error: "OpenAI key not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -265,9 +260,38 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Extract requesting user ID from auth token
+    let requestingUserId: string | null = null;
+    const authHeader = req.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      try {
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+        const anonClient = createClient(supabaseUrl, anonKey);
+        const { data: { user: tokenUser } } = await anonClient.auth.getUser(token);
+        requestingUserId = tokenUser?.id ?? null;
+      } catch { /* token invalid or missing */ }
+    }
+
     // 1. Load conversation history (last 20 messages)
     let historyMessages: { role: string; content: string }[] = [];
     if (conversationId) {
+      // Verify the requesting user owns this conversation
+      if (requestingUserId) {
+        const { data: convOwner } = await supabase
+          .from("ai_conversations")
+          .select("user_id")
+          .eq("id", conversationId)
+          .single();
+
+        if (convOwner && convOwner.user_id !== requestingUserId) {
+          return new Response(
+            JSON.stringify({ error: "Forbidden: conversation not owned by user" }),
+            { status: 403, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+          );
+        }
+      }
+
       const { data: msgs } = await supabase
         .from("ai_messages")
         .select("role, content")
@@ -332,7 +356,7 @@ serve(async (req) => {
       console.error("OpenAI error:", openaiRes.status, errText);
       return new Response(
         JSON.stringify({ error: "Error calling AI model" }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 502, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -359,13 +383,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ respuesta }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("avatar-chat error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });

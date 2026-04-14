@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDemo } from '@/contexts/DemoContext';
 import { PageTransition } from '@/layouts/PageTransition';
 import LandingNavbar from '@/components/landing/LandingNavbar';
 import HeroSection from '@/components/landing/HeroSection';
@@ -11,30 +12,47 @@ import AvatarsSection from '@/components/landing/AvatarsSection';
 import ParentalControlSection from '@/components/landing/ParentalControlSection';
 import CtaBanner from '@/components/landing/CtaBanner';
 import LandingFooter from '@/components/landing/LandingFooter';
+import { DemoRolePickerDialog } from '@/components/demo/DemoRolePickerDialog';
+import { TourProvider, useTour } from '@/components/tour/TourProvider';
 
-const LandingPage = () => {
+function LandingContent() {
   const { isAuthenticated } = useAuth();
+  const { isDemoMode } = useDemo();
+  const { startTour } = useTour();
   const navigate = useNavigate();
+  const [demoDialogOpen, setDemoDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isDemoMode) {
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isDemoMode, navigate]);
 
   return (
-    <PageTransition>
+    <>
       <div className="min-h-screen bg-white">
-        <LandingNavbar />
-        <HeroSection />
+        <LandingNavbar onDemoClick={() => setDemoDialogOpen(true)} onTourClick={startTour} />
+        <HeroSection onDemoClick={() => setDemoDialogOpen(true)} />
         <StatsSection />
         <VisionSection />
         <CampusSection />
         <AvatarsSection />
         <ParentalControlSection />
-        <CtaBanner />
+        <CtaBanner onDemoClick={() => setDemoDialogOpen(true)} />
         <LandingFooter />
       </div>
+
+      <DemoRolePickerDialog open={demoDialogOpen} onOpenChange={setDemoDialogOpen} />
+    </>
+  );
+}
+
+const LandingPage = () => {
+  return (
+    <PageTransition>
+      <TourProvider>
+        <LandingContent />
+      </TourProvider>
     </PageTransition>
   );
 };

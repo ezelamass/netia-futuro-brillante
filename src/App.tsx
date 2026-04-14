@@ -5,6 +5,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DemoProvider } from "@/contexts/DemoContext";
 import { RouteGuard } from "@/components/RouteGuard";
 
 // Public pages
@@ -38,11 +39,17 @@ import TrainingLoad from "./pages/club/TrainingLoad";
 import Reports from "./pages/club/Reports";
 import Communication from "./pages/club/Communication";
 
+// Classroom pages
+import Classroom from "./pages/Classroom";
+import ClassroomModule from "./pages/ClassroomModule";
+import ClassroomLesson from "./pages/ClassroomLesson";
+
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Users from "./pages/admin/Users";
 import Analytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
+import AdminCourses from "./pages/admin/Courses";
 
 const queryClient = new QueryClient();
 
@@ -54,11 +61,12 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <DemoProvider>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/onboarding" element={<RouteGuard allowedRoles={['player','parent','coach','club_admin','admin']}><Onboarding /></RouteGuard>} />
               <Route path="/onboarding-result" element={<RouteGuard allowedRoles={['player','parent','coach','club_admin','admin']}><OnboardingResult /></RouteGuard>} />
               <Route path="/register" element={<Register />} />
 
@@ -72,6 +80,11 @@ const App = () => (
               <Route path="/leaderboard" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Leaderboard /></RouteGuard>} />
               <Route path="/achievements" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Achievements /></RouteGuard>} />
               <Route path="/diagnostic" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><DiagnosticTest /></RouteGuard>} />
+
+              {/* Classroom routes */}
+              <Route path="/classroom" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><Classroom /></RouteGuard>} />
+              <Route path="/classroom/:moduleId" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><ClassroomModule /></RouteGuard>} />
+              <Route path="/classroom/:moduleId/lesson/:lessonId" element={<RouteGuard allowedRoles={['player', 'coach', 'club_admin', 'admin']}><ClassroomLesson /></RouteGuard>} />
 
               {/* Parent routes */}
               <Route path="/parent/dashboard" element={<RouteGuard allowedRoles={['parent']}><ParentDashboard /></RouteGuard>} />
@@ -91,10 +104,12 @@ const App = () => (
               <Route path="/admin/users" element={<RouteGuard allowedRoles={['admin']}><Users /></RouteGuard>} />
               <Route path="/admin/analytics" element={<RouteGuard allowedRoles={['admin']}><Analytics /></RouteGuard>} />
               <Route path="/admin/settings" element={<RouteGuard allowedRoles={['admin']}><AdminSettings /></RouteGuard>} />
+              <Route path="/admin/courses" element={<RouteGuard allowedRoles={['admin']}><AdminCourses /></RouteGuard>} />
 
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </DemoProvider>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

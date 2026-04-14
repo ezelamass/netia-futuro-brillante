@@ -3,9 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Asterisk } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const CtaBanner = () => {
+interface CtaBannerProps {
+  onDemoClick?: () => void;
+}
+
+const CtaBanner = ({ onDemoClick }: CtaBannerProps) => {
   return (
-    <section className="w-full py-12 lg:py-16">
+    <section className="w-full py-12 lg:py-16" data-tour="cta-demo">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           className="relative bg-secondary rounded-[2.3rem] py-14 sm:py-20 px-8 sm:px-16 text-center overflow-hidden"
@@ -22,11 +26,19 @@ const CtaBanner = () => {
             Tu entrenamiento merece una experiencia distinta. Sumate ahora
           </h2>
 
-          <Link to="/register">
-            <Button className="rounded-full px-8 py-3 text-[16px] font-medium h-auto bg-primary hover:bg-primary/90 text-white">
-              Empezá
-            </Button>
-          </Link>
+          <div className="flex flex-col items-center gap-3">
+            <Link to="/register">
+              <Button className="rounded-full px-8 py-3 text-[16px] font-medium h-auto bg-primary hover:bg-primary/90 text-white">
+                Empezá
+              </Button>
+            </Link>
+            <button
+              onClick={onDemoClick}
+              className="text-white/80 text-sm underline hover:text-white transition-colors"
+            >
+              o probá la demo gratis
+            </button>
+          </div>
         </motion.div>
       </div>
     </section>

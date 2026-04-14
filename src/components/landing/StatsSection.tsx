@@ -9,7 +9,7 @@ const stats = [
 
 const StatsSection = () => {
   return (
-    <section className="w-full py-12 lg:py-16">
+    <section className="w-full py-12 lg:py-16" data-tour="stats">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           className="bg-[#FAFAFA] rounded-2xl py-10 px-6 sm:px-10"

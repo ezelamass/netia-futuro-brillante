@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { startOfISOWeek } from 'date-fns';
 import { Player, RosterFilters, RosterSort, calculateTrafficLight, TrafficLightStatus, CoachNote } from '@/types/player';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,6 +92,20 @@ export function useRoster() {
         }
       }
 
+      // Build weekly stats per player from daily_logs this week
+      const weekStart = startOfISOWeek(new Date()).toISOString().split('T')[0];
+      const weeklyLogMap: Record<string, { sessions: number; minutes: number; energySum: number }> = {};
+      for (const log of allLogs) {
+        if (log.log_date < weekStart) continue;
+        if (!weeklyLogMap[log.user_id]) weeklyLogMap[log.user_id] = { sessions: 0, minutes: 0, energySum: 0 };
+        const entry = weeklyLogMap[log.user_id];
+        if (log.training_duration_min > 0) {
+          entry.sessions++;
+          entry.minutes += log.training_duration_min ?? 0;
+        }
+        entry.energySum += log.energy_level ?? 0;
+      }
+
       // Stats map
       const statsMap: Record<string, any> = {};
       for (const s of allStats) {
@@ -137,10 +152,12 @@ export function useRoster() {
             lastUpdated: log ? new Date(log.log_date) : new Date(),
           },
           weeklyStats: {
-            sessions: 0,
+            sessions: weeklyLogMap[p.id]?.sessions ?? 0,
             targetSessions: 4,
-            minutes: 0,
-            rpeAvg: 0,
+            minutes: weeklyLogMap[p.id]?.minutes ?? 0,
+            rpeAvg: weeklyLogMap[p.id]?.sessions
+              ? Math.round((weeklyLogMap[p.id].energySum / weeklyLogMap[p.id].sessions) * 10) / 10
+              : 0,
             warmupCompliance: 1,
             streak: stat?.current_streak ?? 0,
           },

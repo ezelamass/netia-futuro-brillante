@@ -41,19 +41,28 @@ const mapRole = (dbRole: string | null): UserRole => {
 
 const buildUser = async (supabaseUser: SupabaseUser): Promise<User> => {
   // Fetch role from user_roles table
-  const { data: roleData } = await supabase
+  const { data: roleData, error: roleError } = await supabase
     .from('user_roles')
     .select('role')
     .eq('user_id', supabaseUser.id)
     .limit(1)
     .maybeSingle();
 
+  if (roleError) {
+    console.error('Failed to fetch user role:', roleError);
+    throw new Error(`Role fetch failed: ${roleError.message}`);
+  }
+
   // Fetch profile
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('full_name, avatar_url')
     .eq('id', supabaseUser.id)
     .maybeSingle();
+
+  if (profileError) {
+    console.error('Failed to fetch profile:', profileError);
+  }
 
   return {
     id: supabaseUser.id,
@@ -69,33 +78,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener BEFORE checking session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    let mounted = true;
+
+    // 1. Initialize from existing session first
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
         if (session?.user) {
-          // Use setTimeout to avoid deadlock with Supabase client
-          setTimeout(async () => {
+          const appUser = await buildUser(session.user);
+          if (mounted) setUser(appUser);
+        }
+      } catch (err) {
+        console.error('Failed to init session:', err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    // 2. Subscribe to subsequent auth changes (login/logout while app is open)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+        if (session?.user) {
+          try {
             const appUser = await buildUser(session.user);
-            setUser(appUser);
-            setIsLoading(false);
-          }, 0);
+            if (mounted) setUser(appUser);
+          } catch (err) {
+            console.error('Failed to build user on auth change:', err);
+          }
         } else {
-          setUser(null);
-          setIsLoading(false);
+          if (mounted) setUser(null);
         }
       }
     );
 
-    // Check existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const appUser = await buildUser(session.user);
-        setUser(appUser);
-      }
-      setIsLoading(false);
-    });
+    initSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {

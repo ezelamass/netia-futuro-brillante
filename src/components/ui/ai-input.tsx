@@ -1,7 +1,7 @@
 "use client";
 
 import { CornerRightUp, Mic } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
@@ -101,10 +101,41 @@ export function AIInput({
     }
   };
 
+  // Recording duration timer
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  useEffect(() => {
+    if (!isRecording) {
+      setRecordingSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => setRecordingSeconds(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  const formatDuration = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
   const isBusy = disabled || isTranscribing;
 
   return (
     <div className={cn("w-full", className)}>
+      {/* Recording / transcribing status bar */}
+      {(isRecording || isTranscribing) && (
+        <div className={cn(
+          "flex items-center gap-2 px-3 py-1.5 mb-1 rounded-lg text-xs font-medium",
+          isRecording ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+        )}>
+          <span className={cn(
+            "h-2 w-2 rounded-full shrink-0",
+            isRecording ? "bg-destructive animate-pulse" : "bg-primary animate-pulse"
+          )} />
+          {isRecording && <span>Grabando {formatDuration(recordingSeconds)}</span>}
+          {isTranscribing && <span>Transcribiendo audio...</span>}
+        </div>
+      )}
       <div className="relative">
         <Textarea
           ref={textareaRef}

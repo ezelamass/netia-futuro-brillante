@@ -90,7 +90,6 @@ export const useMedicalClearance = () => {
         file_url: urlData.publicUrl,
         issued_date: issuedDate,
         expiry_date: expiryDate,
-        status: calculateClearanceStatus(new Date(expiryDate)),
         doctor_name: doctorName || null,
         uploaded_by: uploaderId,
       });

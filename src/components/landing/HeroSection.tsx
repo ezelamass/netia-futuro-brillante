@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Star, ArrowUpRight } from 'lucide-react';
+import { Star, ArrowUpRight, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  onDemoClick?: () => void;
+}
+
+const HeroSection = ({ onDemoClick }: HeroSectionProps) => {
   return (
-    <section className="w-full bg-white">
+    <section className="w-full bg-white" data-tour="hero-cta">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
           {/* Left column */}
@@ -42,6 +46,14 @@ const HeroSection = () => {
                   Inscribite
                 </Button>
               </Link>
+              <Button
+                variant="secondary"
+                className="rounded-full px-7 py-3 text-[16px] font-medium h-auto gap-2"
+                onClick={onDemoClick}
+              >
+                <Play className="w-4 h-4" />
+                Probar Demo
+              </Button>
               <a href="#nosotros">
                 <Button
                   variant="outline"
