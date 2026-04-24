@@ -90,10 +90,26 @@ const Login = () => {
       await login(email, password);
       toast.success('¡Bienvenido a NETIA!');
     } catch (error: any) {
-      const message = error?.message?.includes('Invalid login')
-        ? 'Email o contraseña incorrectos'
-        : 'Error al iniciar sesión';
-      toast.error(message);
+      const raw = error?.message || '';
+      let title = 'Error al iniciar sesión';
+      let description: string | undefined;
+
+      if (raw.includes('Invalid login') || raw.toLowerCase().includes('invalid credentials')) {
+        title = 'No pudimos iniciar sesión';
+        description =
+          'Revisá que el email y la contraseña estén correctos. Si nunca creaste una cuenta, registrate primero.';
+      } else if (raw.toLowerCase().includes('email not confirmed')) {
+        title = 'Email sin confirmar';
+        description = 'Revisá tu casilla y hacé click en el link de confirmación que te enviamos.';
+      } else if (raw.toLowerCase().includes('network') || raw.toLowerCase().includes('fetch')) {
+        title = 'Error de conexión';
+        description = 'No pudimos contactar al servidor. Revisá tu conexión a internet e intentá de nuevo.';
+      } else if (raw) {
+        description = raw;
+      }
+
+      toast.error(title, { description });
+      console.error('[login] failed:', error);
     } finally {
       setIsLoading(false);
     }

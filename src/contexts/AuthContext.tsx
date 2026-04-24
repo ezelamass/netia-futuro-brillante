@@ -32,21 +32,29 @@ export const useAuth = () => {
   return context;
 };
 
-// Map DB role to our frontend role type
-const mapRole = (dbRole: string | null): UserRole => {
+// Priority order: highest-privilege role wins when a user has multiple rows
+// in user_roles. Without this, a `.limit(1)` fetch could return 'player' for
+// an admin and send them to the wrong dashboard.
+const ROLE_PRIORITY: UserRole[] = ['admin', 'club_admin', 'coach', 'parent', 'player'];
+
+const pickHighestRole = (roles: Array<string | null | undefined>): UserRole => {
   const validRoles: UserRole[] = ['player', 'parent', 'coach', 'club_admin', 'admin'];
-  if (dbRole && validRoles.includes(dbRole as UserRole)) return dbRole as UserRole;
+  const valid = roles.filter((r): r is UserRole => !!r && validRoles.includes(r as UserRole));
+  if (valid.length === 0) return 'player';
+  for (const candidate of ROLE_PRIORITY) {
+    if (valid.includes(candidate)) return candidate;
+  }
   return 'player';
 };
 
 const buildUser = async (supabaseUser: SupabaseUser): Promise<User> => {
-  // Fetch role from user_roles table
+  // Fetch ALL roles for this user, then pick the highest-privilege one.
+  // This fixes the case where a user has multiple rows in user_roles
+  // (e.g. admin + player) and a single-row fetch could pick the wrong one.
   const { data: roleData, error: roleError } = await supabase
     .from('user_roles')
     .select('role')
-    .eq('user_id', supabaseUser.id)
-    .limit(1)
-    .maybeSingle();
+    .eq('user_id', supabaseUser.id);
 
   if (roleError) {
     console.error('Failed to fetch user role:', roleError);
@@ -68,7 +76,7 @@ const buildUser = async (supabaseUser: SupabaseUser): Promise<User> => {
     id: supabaseUser.id,
     name: profile?.full_name || supabaseUser.user_metadata?.full_name || '',
     email: supabaseUser.email || '',
-    role: mapRole(roleData?.role ?? null),
+    role: pickHighestRole((roleData ?? []).map((r) => r.role)),
     avatar: profile?.avatar_url || undefined,
   };
 };

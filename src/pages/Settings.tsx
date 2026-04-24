@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { AppLayout } from '@/layouts/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import {
 } from '@/components/settings/modals';
 import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   THEME_OPTIONS,
   LANGUAGE_OPTIONS,
@@ -50,7 +52,7 @@ import {
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { settings, updateSetting } = useSettings();
 
   // Modal states
@@ -58,6 +60,8 @@ const Settings = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showResetOnboardingDialog, setShowResetOnboardingDialog] = useState(false);
+  const [resettingOnboarding, setResettingOnboarding] = useState(false);
 
   // Calculate storage
   const [storageUsed, setStorageUsed] = useState('0 KB');
@@ -93,6 +97,36 @@ const Settings = () => {
     logout();
     toast.success('Sesión cerrada correctamente');
     navigate('/login');
+  };
+
+  const handleResetOnboarding = async () => {
+    if (!user?.id) {
+      toast.error('No hay sesión activa');
+      return;
+    }
+    setResettingOnboarding(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ onboarding_completed: false, onboarding: {} })
+        .eq('id', user.id);
+      if (error) throw error;
+
+      localStorage.removeItem('netia_onboarding_data');
+      localStorage.removeItem('netia_onboarding_step');
+      localStorage.removeItem('netia_onboarding_completed');
+
+      toast.success('Vas a rehacer la configuración inicial');
+      setShowResetOnboardingDialog(false);
+      navigate('/onboarding');
+    } catch (err: any) {
+      console.error('[settings] reset onboarding failed:', err);
+      toast.error('No pudimos reiniciar la configuración', {
+        description: err?.message,
+      });
+    } finally {
+      setResettingOnboarding(false);
+    }
   };
 
   return (
@@ -345,6 +379,16 @@ const Settings = () => {
             />
           </SettingsSection>
 
+          {/* Onboarding */}
+          <SettingsSection icon={RotateCcw} title="Configuración inicial">
+            <SettingsRow
+              type="link"
+              label="Rehacer onboarding"
+              description="Volvé a pasar por la configuración inicial para actualizar tus datos"
+              onClick={() => setShowResetOnboardingDialog(true)}
+            />
+          </SettingsSection>
+
           {/* Session */}
           <SettingsSection icon={LogOut} title="Sesión">
             <SettingsRow
@@ -396,6 +440,25 @@ const Settings = () => {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleLogout}>
               Cerrar sesión
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Onboarding Confirmation */}
+      <AlertDialog open={showResetOnboardingDialog} onOpenChange={setShowResetOnboardingDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Rehacer la configuración inicial?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a volver a pasar por los pasos del onboarding. Tus datos actuales quedarán
+              guardados y podrás actualizarlos. No perdés tus logs, entrenamientos ni progreso.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resettingOnboarding}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetOnboarding} disabled={resettingOnboarding}>
+              {resettingOnboarding ? 'Reiniciando...' : 'Rehacer ahora'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

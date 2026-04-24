@@ -9,19 +9,22 @@ import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
 import { User, MapPin, Globe, Trophy, Hand, UserCheck } from 'lucide-react';
 
+// NOTE: only 'tenis' is fully supported right now. Other sports are shown as
+// "próximamente" placeholders and disabled in the Select so users can see the
+// roadmap without being silently downgraded to a tennis experience.
 const sports = [
-  { value: 'futbol', label: '⚽ Fútbol' },
-  { value: 'tenis', label: '🎾 Tenis' },
-  { value: 'hockey', label: '🏑 Hockey' },
-  { value: 'patin', label: '⛸️ Patín' },
-  { value: 'karting', label: '🏎️ Karting' },
-  { value: 'natacion', label: '🏊 Natación' },
-  { value: 'basquet', label: '🏀 Básquet' },
-  { value: 'voley', label: '🏐 Vóley' },
-  { value: 'rugby', label: '🏉 Rugby' },
-  { value: 'atletismo', label: '🏃 Atletismo' },
-  { value: 'gimnasia', label: '🤸 Gimnasia' },
-  { value: 'otro', label: '🎯 Otro' },
+  { value: 'tenis', label: '🎾 Tenis', available: true },
+  { value: 'futbol', label: '⚽ Fútbol', available: false },
+  { value: 'hockey', label: '🏑 Hockey', available: false },
+  { value: 'patin', label: '⛸️ Patín', available: false },
+  { value: 'karting', label: '🏎️ Karting', available: false },
+  { value: 'natacion', label: '🏊 Natación', available: false },
+  { value: 'basquet', label: '🏀 Básquet', available: false },
+  { value: 'voley', label: '🏐 Vóley', available: false },
+  { value: 'rugby', label: '🏉 Rugby', available: false },
+  { value: 'atletismo', label: '🏃 Atletismo', available: false },
+  { value: 'gimnasia', label: '🤸 Gimnasia', available: false },
+  { value: 'otro', label: '🎯 Otro', available: false },
 ];
 
 const levels = [
@@ -148,12 +151,26 @@ export const PersonalDataStep = () => {
               </SelectTrigger>
               <SelectContent>
                 {sports.map((sport) => (
-                  <SelectItem key={sport.value} value={sport.value}>
-                    {sport.label}
+                  <SelectItem
+                    key={sport.value}
+                    value={sport.value}
+                    disabled={!sport.available}
+                  >
+                    <span className="flex items-center gap-2">
+                      {sport.label}
+                      {!sport.available && (
+                        <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          próximamente
+                        </span>
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Estamos arrancando con tenis. Muy pronto sumamos más deportes.
+            </p>
           </div>
 
           {/* Level */}

@@ -209,11 +209,12 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
 
       // Role-specific fields
       if (user.role === 'player') {
-        profileUpdate.sport = data.mainSport || 'tenis';
+        // mainSport is validated in Onboarding.tsx step 1 — no silent fallback
+        if (data.mainSport) profileUpdate.sport = data.mainSport;
         profileUpdate.date_of_birth = data.birthDate || null;
       } else if (user.role === 'coach' || user.role === 'club_admin') {
         profileUpdate.club_name = data.coachClubName || null;
-        profileUpdate.sport = data.mainSport || null;
+        if (data.mainSport) profileUpdate.sport = data.mainSport;
       }
 
       await supabase

@@ -95,7 +95,7 @@ const OnboardingResult = () => {
     role,
     level: (data as any).level || 'principiante',
     mainGoal: (data as any).mainGoal || '',
-    mainSport: (data as any).mainSport || 'tenis',
+    mainSport: (data as any).mainSport,
     areasToImprove: (data as any).areasToImprove || [],
     selectedAvatar,
     fullName,
