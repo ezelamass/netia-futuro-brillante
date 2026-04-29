@@ -1,16 +1,10 @@
-import { useDemo } from '@/contexts/DemoContext';
+import { useDemo, DEMO_ROLES } from '@/contexts/DemoContext';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Gamepad2, ChevronDown, X, Check, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import type { UserRole } from '@/contexts/AuthContext';
-
-const ROLES: { value: UserRole; label: string }[] = [
-  { value: 'player', label: 'Jugador' },
-  { value: 'coach', label: 'Entrenador' },
-  { value: 'admin', label: 'Administrador' },
-];
+import { toast } from 'sonner';
 
 export function DemoBanner() {
   const { isDemoMode, demoRole, switchDemoRole, exitDemo } = useDemo();
@@ -18,11 +12,18 @@ export function DemoBanner() {
 
   if (!isDemoMode) return null;
 
-  const currentLabel = ROLES.find(r => r.value === demoRole)?.label || 'Demo';
+  const currentLabel = DEMO_ROLES.find(r => r.role === demoRole)?.label || 'Demo';
 
   const handleRegister = async () => {
     await exitDemo();
     navigate('/register');
+  };
+
+  const handleSwitch = async (role: typeof DEMO_ROLES[number]['role']) => {
+    const result = await switchDemoRole(role);
+    if (!result.ok) {
+      toast.error('No pudimos cambiar de rol', { description: result.error });
+    }
   };
 
   return (
@@ -52,14 +53,14 @@ export function DemoBanner() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center">
-              {ROLES.map(role => (
+              {DEMO_ROLES.map(role => (
                 <DropdownMenuItem
-                  key={role.value}
-                  onClick={() => switchDemoRole(role.value)}
+                  key={role.role}
+                  onClick={() => handleSwitch(role.role)}
                   className="gap-2"
                 >
-                  {role.value === demoRole && <Check className="w-3.5 h-3.5" />}
-                  {role.value !== demoRole && <span className="w-3.5" />}
+                  {role.role === demoRole && <Check className="w-3.5 h-3.5" />}
+                  {role.role !== demoRole && <span className="w-3.5" />}
                   {role.label}
                 </DropdownMenuItem>
               ))}

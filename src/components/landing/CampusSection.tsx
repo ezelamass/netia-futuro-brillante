@@ -21,7 +21,7 @@ const campusCards = [
 
 const CampusSection = () => {
   return (
-    <section id="campus" className="w-full py-16 lg:py-24 bg-white" data-tour="campus">
+    <section id="campus" className="w-full py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -33,8 +33,8 @@ const CampusSection = () => {
           </h2>
         </div>
 
-        {/* Cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {/* Cards grid — tour spotlight target */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto" data-tour="campus">
           {campusCards.map((card, index) => {
             const Icon = card.icon;
             return (

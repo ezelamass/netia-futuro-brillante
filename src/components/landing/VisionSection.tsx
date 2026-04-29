@@ -19,9 +19,9 @@ const visionCards = [
 
 const VisionSection = () => {
   return (
-    <section id="nosotros" className="w-full py-16 lg:py-24 bg-white" data-tour="vision">
+    <section id="nosotros" className="w-full py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20" data-tour="vision">
           {/* Left column */}
           <div className="flex-1 flex flex-col justify-center">
             <span className="inline-block w-fit px-4 py-1.5 rounded-full bg-[#F5F5F5] text-sm font-medium text-muted-foreground mb-6">

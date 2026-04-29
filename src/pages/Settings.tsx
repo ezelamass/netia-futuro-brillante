@@ -13,7 +13,6 @@ import {
   LogOut,
   AlertTriangle,
   ArrowLeft,
-  Trash2,
   RotateCcw,
 } from 'lucide-react';
 import { AppLayout } from '@/layouts/AppLayout';

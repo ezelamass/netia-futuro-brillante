@@ -4,6 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { EmptyState } from '@/components/ui/empty-state';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDemoGuard } from '@/hooks/useDemoGuard';
 import tinoAvatar from '@/assets/tino-avatar.png';
 import zahiaAvatar from '@/assets/zahia-avatar.png';
 import romaAvatar from '@/assets/roma-avatar.png';
@@ -49,6 +50,7 @@ function generateId() { return `${Date.now()}-${Math.random().toString(36).slice
 const Chat = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { blockIfDemo } = useDemoGuard();
 
   const [allConversations, setAllConversations] = useState<ConversationMeta[]>([]);
   const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
@@ -137,6 +139,9 @@ const Chat = () => {
 
   const createNewConversation = async (avatar: AvatarId): Promise<string | null> => {
     if (!user) return null;
+    if (blockIfDemo('Estás en modo demo. Registrate para guardar tus conversaciones con los avatares.')) {
+      return null;
+    }
     const { data, error } = await supabase
       .from('ai_conversations')
       .insert({ user_id: user.id, avatar, title: `Chat con ${avatar}` })
@@ -162,6 +167,7 @@ const Chat = () => {
   };
 
   const handleDeleteConversation = async (id: string) => {
+    if (blockIfDemo('No podés borrar conversaciones en modo demo.')) return;
     await supabase.from('ai_messages').delete().eq('conversation_id', id);
     await supabase.from('ai_conversations').delete().eq('id', id);
     messageCacheRef.current.delete(id);
@@ -180,6 +186,10 @@ const Chat = () => {
   };
 
   const saveMessage = async (convoId: string, role: 'user' | 'assistant', content: string) => {
+    // saveMessage is called from sendMessage, which already blocks demo mode
+    // before any work happens. Double-check here in case it gets called from
+    // another path in the future.
+    if (blockIfDemo()) return;
     await supabase.from('ai_messages').insert({ conversation_id: convoId, role, content });
     const now = new Date().toISOString();
     await supabase.from('ai_conversations').update({ last_message_at: now }).eq('id', convoId);
@@ -188,6 +198,7 @@ const Chat = () => {
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || !selectedAvatar || isSending) return;
+    if (blockIfDemo('Esto es una demo. Registrate para chatear con los avatares de verdad.')) return;
     const avatar = selectedAvatar;
     let convoId = activeConvoId;
 

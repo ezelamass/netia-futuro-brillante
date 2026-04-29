@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { startOfDay, isSameDay, subDays, isAfter, format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDemoGuard } from '@/hooks/useDemoGuard';
 
 export interface DailyLog {
   id: string;
@@ -37,6 +38,7 @@ const getTodayAction = (): TodayAction => {
 
 export const useDailyLog = () => {
   const { user } = useAuth();
+  const { blockIfDemo } = useDemoGuard();
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [todayAction, setTodayAction] = useState<TodayAction>(() => {
@@ -87,6 +89,7 @@ export const useDailyLog = () => {
 
   const addLog = async (logData: Omit<DailyLog, 'id' | 'date' | 'completedAt'>) => {
     if (!user) return;
+    if (blockIfDemo('No podés guardar logs en modo demo. Registrate para empezar a trackear.')) return;
 
     const { data, error } = await supabase
       .from('daily_logs')
@@ -125,7 +128,8 @@ export const useDailyLog = () => {
 
   const updateTodayLog = async (updates: Partial<Omit<DailyLog, 'id' | 'date' | 'completedAt'>>) => {
     if (!user || !todayLog) return;
-    
+    if (blockIfDemo('No podés modificar logs en modo demo.')) return;
+
     const updatePayload: Record<string, any> = {};
     if (updates.sleep !== undefined) updatePayload.sleep_hours = updates.sleep;
     if (updates.hydration !== undefined) updatePayload.hydration_liters = updates.hydration;

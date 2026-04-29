@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { UserProfile, profileSchema, DEFAULT_PROFILE } from '@/types/profile';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemoGuard } from '@/hooks/useDemoGuard';
 
 interface UseProfileReturn {
   profile: UserProfile;
@@ -80,6 +81,7 @@ function mapDbToFormProfile(
 
 export const useProfile = (): UseProfileReturn => {
   const { user } = useAuth();
+  const { blockIfDemo } = useDemoGuard();
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -149,6 +151,7 @@ export const useProfile = (): UseProfileReturn => {
 
   const saveProfile = useCallback(async () => {
     if (!user?.id) return;
+    if (blockIfDemo('Estás en modo demo. Registrate para guardar cambios en tu perfil.')) return;
 
     const isValid = await form.trigger();
     if (!isValid) {
@@ -191,7 +194,7 @@ export const useProfile = (): UseProfileReturn => {
     } finally {
       setIsSaving(false);
     }
-  }, [form, user?.id]);
+  }, [form, user?.id, blockIfDemo]);
 
   const updateField = useCallback(<K extends keyof UserProfile>(
     field: K,

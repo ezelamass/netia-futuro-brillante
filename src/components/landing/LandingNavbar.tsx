@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, Menu, X, Play, Eye } from 'lucide-react';
+import { Menu, X, Play, Eye } from 'lucide-react';
 
 const navLinks = [
   { label: 'Nosotros', href: '#nosotros' },
@@ -88,6 +88,14 @@ const LandingNavbar = ({ onDemoClick, onTourClick }: LandingNavbarProps) => {
                 {link.label}
               </a>
             ))}
+            <Button
+              variant="ghost"
+              className="rounded-full w-full text-[16px] font-medium gap-2 text-muted-foreground"
+              onClick={() => { setMobileOpen(false); onTourClick?.(); }}
+            >
+              <Eye className="w-4 h-4" />
+              Ver Tour
+            </Button>
             <Button
               variant="outline"
               className="rounded-full w-full text-[16px] font-medium gap-2 border-secondary text-secondary"

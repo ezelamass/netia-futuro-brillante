@@ -9,10 +9,11 @@ interface CtaBannerProps {
 
 const CtaBanner = ({ onDemoClick }: CtaBannerProps) => {
   return (
-    <section className="w-full py-12 lg:py-16" data-tour="cta-demo">
+    <section className="w-full py-12 lg:py-16">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           className="relative bg-secondary rounded-[2.3rem] py-14 sm:py-20 px-8 sm:px-16 text-center overflow-hidden"
+          data-tour="cta-demo"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}

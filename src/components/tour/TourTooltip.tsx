@@ -19,12 +19,18 @@ export function TourTooltip({
 }: TourTooltipProps) {
   // Position tooltip relative to spotlight
   const tooltipWidth = 340;
+  const tooltipHeight = 220; // estimate, used for clamp math only
   const gap = 16;
+  const margin = 16;
 
+  // All values are in VIEWPORT coordinates because the tour overlay is
+  // rendered with `position: fixed` and we use viewport-relative spotlight
+  // coords. No window.scrollY math anywhere here.
   let top = 0;
   let left = 0;
 
   const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
 
   switch (step.placement) {
     case 'bottom':
@@ -32,23 +38,40 @@ export function TourTooltip({
       left = spotlight.left + spotlight.width / 2 - tooltipWidth / 2;
       break;
     case 'top':
-      top = spotlight.top - gap - 200; // approx tooltip height
+      top = spotlight.top - gap - tooltipHeight;
       left = spotlight.left + spotlight.width / 2 - tooltipWidth / 2;
       break;
     case 'left':
-      top = spotlight.top + spotlight.height / 2 - 100;
+      top = spotlight.top + spotlight.height / 2 - tooltipHeight / 2;
       left = spotlight.left - tooltipWidth - gap;
       break;
     case 'right':
-      top = spotlight.top + spotlight.height / 2 - 100;
+      top = spotlight.top + spotlight.height / 2 - tooltipHeight / 2;
       left = spotlight.left + spotlight.width + gap;
       break;
   }
 
-  // Clamp to viewport
-  if (left < 16) left = 16;
-  if (left + tooltipWidth > viewportWidth - 16) left = viewportWidth - tooltipWidth - 16;
-  if (top < 16) top = spotlight.top + spotlight.height + gap; // fallback to bottom
+  // Horizontal clamp to viewport
+  if (left < margin) left = margin;
+  if (left + tooltipWidth > viewportWidth - margin) {
+    left = viewportWidth - tooltipWidth - margin;
+  }
+
+  // Vertical clamp to viewport (both edges)
+  const minTop = margin;
+  const maxTop = viewportHeight - tooltipHeight - margin;
+
+  if (top < minTop) {
+    // Would be cut off at the top → place below spotlight instead
+    top = spotlight.top + spotlight.height + gap;
+  }
+  if (top > maxTop) {
+    // Would be cut off at the bottom → place above spotlight instead
+    top = spotlight.top - gap - tooltipHeight;
+  }
+  // Safety clamp for very tall spotlights where neither side fits
+  if (top < minTop) top = minTop;
+  if (top > maxTop) top = maxTop;
 
   return (
     <motion.div
@@ -56,8 +79,12 @@ export function TourTooltip({
       initial={{ opacity: 0, scale: 0.95, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed z-[80] bg-white rounded-2xl shadow-2xl border p-5"
+      className="absolute z-[9999] bg-white rounded-2xl shadow-2xl border p-5"
       style={{ top, left, width: tooltipWidth, maxWidth: 'calc(100vw - 32px)' }}
+      role="dialog"
+      aria-live="polite"
+      aria-label={`Paso ${currentStep + 1} de ${totalSteps}: ${step.title}`}
+      translate="no"
     >
       <h3 className="text-lg font-heading font-semibold text-foreground">
         {step.title}

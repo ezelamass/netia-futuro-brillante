@@ -9,11 +9,11 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onDemoClick }: HeroSectionProps) => {
   return (
-    <section className="w-full bg-white" data-tour="hero-cta">
+    <section className="w-full bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-          {/* Left column */}
-          <div className="flex-1 max-w-xl">
+          {/* Left column — tour spotlight target (CTAs + headline) */}
+          <div className="flex-1 max-w-xl" data-tour="hero-cta">
             {/* Social proof */}
             <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />

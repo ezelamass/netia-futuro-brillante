@@ -18,15 +18,19 @@ import { TourProvider, useTour } from '@/components/tour/TourProvider';
 function LandingContent() {
   const { isAuthenticated } = useAuth();
   const { isDemoMode } = useDemo();
-  const { startTour } = useTour();
+  const { startTour, isActive: tourActive, stopTour } = useTour();
   const navigate = useNavigate();
   const [demoDialogOpen, setDemoDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && !isDemoMode) {
+      // If the tour is active when an auth event fires (e.g. login in another
+      // tab), close it first so its overlay doesn't get orphaned in the DOM
+      // after this component unmounts.
+      if (tourActive) stopTour();
       navigate('/dashboard');
     }
-  }, [isAuthenticated, isDemoMode, navigate]);
+  }, [isAuthenticated, isDemoMode, navigate, tourActive, stopTour]);
 
   return (
     <>

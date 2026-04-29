@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 
 const ParentalControlSection = () => {
   return (
-    <section className="w-full py-16 lg:py-24 bg-white" data-tour="parental">
+    <section className="w-full py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center" data-tour="parental">
           {/* Left — Title + Seal */}
           <div className="flex-1 flex flex-col items-center lg:items-start">
             <h2 className="text-3xl sm:text-4xl lg:text-[40px] leading-tight font-heading font-bold text-[#363636] mb-10 text-center lg:text-left">
