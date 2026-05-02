@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Users, Building2, Shield, type LucideIcon } from 'lucide-react';
+import { Trophy, Users, Building2, Shield, Heart, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserRole } from '@/contexts/AuthContext';
 
@@ -32,6 +32,17 @@ export const DEMO_ROLES: DemoRoleConfig[] = [
     description: 'Explora tu dashboard, logros, entrenamientos y chatea con tu avatar IA',
     gradient: 'from-blue-500/10 to-cyan-500/10',
     iconColor: 'text-blue-500',
+  },
+  {
+    role: 'parent',
+    email: 'demo-padre@netia.app',
+    password: 'netiademo',
+    dashboard: '/parent/dashboard',
+    label: 'Familia',
+    icon: Heart,
+    description: 'Seguí el bienestar, entrenamientos y apto médico de tu hijo/a deportista',
+    gradient: 'from-pink-500/10 to-rose-500/10',
+    iconColor: 'text-pink-500',
   },
   {
     role: 'coach',
@@ -86,6 +97,7 @@ export interface DemoLoginResult {
 interface DemoContextType {
   isDemoMode: boolean;
   demoRole: UserRole | null;
+  isSwitching: boolean;
   demoLogin: (role: UserRole) => Promise<DemoLoginResult>;
   switchDemoRole: (role: UserRole) => Promise<DemoLoginResult>;
   exitDemo: () => Promise<void>;
@@ -111,6 +123,29 @@ const friendlyAuthError = (err: unknown): string => {
   return message;
 };
 
+/**
+ * Wait until the highest-priority role for the freshly signed-in user matches
+ * the expected role. Prevents the navigate() call from running while
+ * AuthContext still holds the previous user, which causes RouteGuard to bounce
+ * to /dashboard or /login.
+ */
+const waitForRole = async (expectedRole: UserRole, timeoutMs = 4000): Promise<void> => {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    if (userId) {
+      const { data: roleRows } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      const roles = (roleRows ?? []).map((r) => r.role);
+      if (roles.includes(expectedRole)) return;
+    }
+    await new Promise((r) => setTimeout(r, 80));
+  }
+};
+
 export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const [state, setState] = useState<DemoState>(() => {
@@ -120,6 +155,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     } catch { /* ignore */ }
     return { isDemoMode: false, demoRole: null };
   });
+  const [isSwitching, setIsSwitching] = useState(false);
 
   // Persist to sessionStorage
   useEffect(() => {
@@ -138,18 +174,22 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
+        setIsSwitching(true);
         const { error } = await supabase.auth.signInWithPassword({
           email: account.email,
           password: account.password,
         });
         if (error) throw error;
 
+        await waitForRole(role);
         setState({ isDemoMode: true, demoRole: role });
         navigate(account.dashboard);
         return { ok: true };
       } catch (err) {
         console.error('[demo] login failed:', err);
         return { ok: false, error: friendlyAuthError(err) };
+      } finally {
+        setIsSwitching(false);
       }
     },
     [navigate]
@@ -162,11 +202,16 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       if (!account) return { ok: false, error: `Rol demo desconocido: ${role}` };
 
       try {
+        setIsSwitching(true);
+
+        // 1) Park on a route with no role requirements BEFORE signing out, so
+        //    RouteGuard on the current page (e.g. /admin/dashboard) does not
+        //    bounce to /login the moment the user becomes null.
+        navigate('/', { replace: true });
+        // Let React flush the navigation before tearing down the session.
+        await new Promise((r) => setTimeout(r, 50));
+
         await supabase.auth.signOut();
-        // Give Supabase's local state a tick to propagate the SIGNED_OUT
-        // event before we sign in again. Prevents out-of-order events on
-        // slow networks.
-        await new Promise((resolve) => setTimeout(resolve, 100));
 
         const { error } = await supabase.auth.signInWithPassword({
           email: account.email,
@@ -174,12 +219,18 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         });
         if (error) throw error;
 
+        // 2) Wait until the new role is observable in the DB so the next
+        //    AuthContext rebuild picks the correct role before RouteGuard runs.
+        await waitForRole(role);
+
         setState({ isDemoMode: true, demoRole: role });
-        navigate(account.dashboard);
+        navigate(account.dashboard, { replace: true });
         return { ok: true };
       } catch (err) {
         console.error('[demo] switch failed:', err);
         return { ok: false, error: friendlyAuthError(err) };
+      } finally {
+        setIsSwitching(false);
       }
     },
     [navigate, state.demoRole]
@@ -197,6 +248,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     <DemoContext.Provider value={{
       isDemoMode: state.isDemoMode,
       demoRole: state.demoRole,
+      isSwitching,
       demoLogin,
       switchDemoRole,
       exitDemo,
