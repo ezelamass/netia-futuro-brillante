@@ -19,12 +19,18 @@ export function DemoRolePickerDialog({ open, onOpenChange }: DemoRolePickerDialo
   const handleSelect = async (role: UserRole) => {
     if (loadingRole) return;
     setLoadingRole(role);
+    // Close the dialog immediately so the user gets feedback on mobile,
+    // where the network round-trip can take 1-2s and the modal otherwise
+    // appears frozen.
+    onOpenChange(false);
+    const toastId = toast.loading('Abriendo demo...');
     try {
       const result = await demoLogin(role);
       if (result.ok) {
-        onOpenChange(false);
+        toast.success('Demo lista', { id: toastId });
       } else {
         toast.error('No pudimos abrir la demo', {
+          id: toastId,
           description: result.error,
         });
       }
