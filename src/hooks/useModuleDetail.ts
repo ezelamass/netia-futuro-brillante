@@ -89,7 +89,7 @@ export function useModuleDetail(moduleId: string | undefined) {
         title: moduleData.title,
         description: moduleData.description,
         coverUrl: moduleData.cover_url,
-        targetRole: moduleData.target_role,
+        targetRole: moduleData.target_role as 'coach' | 'player',
         sortOrder: moduleData.sort_order,
         isPublished: moduleData.is_published,
         createdAt: moduleData.created_at,

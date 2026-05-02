@@ -192,6 +192,7 @@ export const useAnalytics = () => {
 
     const data: TimeSeriesData[] = [];
     const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     for (let i = daysBack - 1; i >= 0; i--) {
       const d = new Date(now);
