@@ -175,6 +175,11 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         setIsSwitching(true);
+        // Mark demo mode BEFORE auth changes so any LandingPage/RouteGuard
+        // useEffect that watches isAuthenticated also sees isDemoMode=true
+        // and won't redirect to the wrong dashboard mid-flow.
+        setState({ isDemoMode: true, demoRole: role });
+
         const { error } = await supabase.auth.signInWithPassword({
           email: account.email,
           password: account.password,
@@ -182,11 +187,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         if (error) throw error;
 
         await waitForRole(role);
-        setState({ isDemoMode: true, demoRole: role });
-        navigate(account.dashboard);
+        navigate(account.dashboard, { replace: true });
         return { ok: true };
       } catch (err) {
         console.error('[demo] login failed:', err);
+        // Revert demo flag if login failed.
+        setState({ isDemoMode: false, demoRole: null });
         return { ok: false, error: friendlyAuthError(err) };
       } finally {
         setIsSwitching(false);
@@ -201,6 +207,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       const account = getDemoConfig(role);
       if (!account) return { ok: false, error: `Rol demo desconocido: ${role}` };
 
+      const previousRole = state.demoRole;
       try {
         setIsSwitching(true);
 
@@ -210,6 +217,9 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         navigate('/', { replace: true });
         // Let React flush the navigation before tearing down the session.
         await new Promise((r) => setTimeout(r, 50));
+
+        // Pre-mark new role so LandingPage's auth-redirect effect respects demo.
+        setState({ isDemoMode: true, demoRole: role });
 
         await supabase.auth.signOut();
 
@@ -223,11 +233,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         //    AuthContext rebuild picks the correct role before RouteGuard runs.
         await waitForRole(role);
 
-        setState({ isDemoMode: true, demoRole: role });
         navigate(account.dashboard, { replace: true });
         return { ok: true };
       } catch (err) {
         console.error('[demo] switch failed:', err);
+        // Roll back to previous demo role on failure.
+        setState({ isDemoMode: previousRole !== null, demoRole: previousRole });
         return { ok: false, error: friendlyAuthError(err) };
       } finally {
         setIsSwitching(false);

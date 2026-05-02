@@ -1,87 +1,78 @@
-# Plan: Fix Demo Role Switching + Add Familia Role
+# Fix: Demo no inicia desde mobile
 
-## Problems detected
+## Diagnóstico
 
-### 1. Role switching is broken (PC + mobile)
+Mirando el screenshot del mobile y el código, el flujo de la demo se rompe por **una condición de carrera entre `LandingPage` y `DemoContext.demoLogin`**. En el screenshot se ve:
 
-`switchDemoRole` in `DemoContext.tsx` does: `signOut → 100ms wait → signInWithPassword → navigate(dashboard)`.
+- "Familia" muestra el ícono de loading (la llamada arrancó).
+- "Entrenador" quedó con outline de focus (el tap se procesó).
+- Pero el diálogo nunca se cierra y la pantalla nunca cambia.
 
-The issue is a **race condition with `RouteGuard`**:
-- `signOut` fires `SIGNED_OUT` → `AuthContext.user` becomes `null` → `RouteGuard` on the current page (e.g. `/admin/dashboard`) sees `!isAuthenticated` and redirects to `/login`.
-- `signInWithPassword` completes → `onAuthStateChange` rebuilds the user with the new role → but `buildUser` is async (two DB queries). During that gap, `navigate('/dashboard')` runs against the **old/null** user. RouteGuard then sees a role mismatch (e.g. new role is `player`, page requires `admin`-only or vice-versa) and bounces to `/dashboard`, which itself may not allow that role, causing redirect loops or landing on the wrong screen.
-- On mobile this is more visible because dropdown re-opens on top of a half-rendered page.
+### Causa raíz
 
-### 2. Familia (parent) role missing
+En `src/pages/LandingPage.tsx` (líneas 25-33):
 
-- `DEMO_ROLES` in `DemoContext.tsx` only has 4 roles: player, coach, club_admin, admin.
-- No `demo-padre@netia.app` user exists in the database (verified via SQL).
-- The parent UI (`/parent/dashboard`, `/parent/child`, `/parent/medical`) is fully built but unreachable from demo mode.
-- Parent needs at least one linked child (via `family_links`) to render anything meaningful — the demo player (`demo-jugador@netia.app`) is the natural target.
+```ts
+useEffect(() => {
+  if (isAuthenticated && !isDemoMode) {
+    if (tourActive) stopTour();
+    navigate('/dashboard');
+  }
+}, [isAuthenticated, isDemoMode, navigate, tourActive, stopTour]);
+```
+
+Y en `DemoContext.demoLogin` (líneas 169-194), el orden es:
+
+1. `supabase.auth.signInWithPassword(...)` → dispara `onAuthStateChange`.
+2. `AuthContext` setea `user` → `isAuthenticated` pasa a `true`.
+3. **En este momento `isDemoMode` todavía es `false`** porque `setState({ isDemoMode: true })` se ejecuta más tarde.
+4. El `useEffect` de `LandingPage` dispara `navigate('/dashboard')` inmediatamente.
+5. `LandingPage` se desmonta → el `Dialog` (que vive dentro de `LandingContent`) se desmonta junto con su estado de loading.
+6. Recién después, `demoLogin` hace `setState({ isDemoMode: true })` y `navigate(account.dashboard)`, pero como ya hubo una navegación anterior, en mobile la nueva navegación se pierde y para roles que no son `player` (Familia → `/parent/dashboard`, Entrenador → `/club/dashboard`, Admin → `/admin/dashboard`) el usuario ya fue redirigido al lugar equivocado (`/dashboard`).
+
+En desktop a veces funciona porque la animación del Dialog (Radix) y el timing del re-render son distintos; en mobile la pestaña es más lenta y la condición se manifiesta siempre.
+
+Hay un problema adicional: el destino `'/dashboard'` está hard-codeado en LandingPage, lo cual además rompe el login normal de no-jugadores incluso fuera de la demo.
 
 ---
 
-## Implementation
+## Plan paso a paso
 
-### A. Create the demo Familia user (SQL migration)
+### 1. `src/pages/LandingPage.tsx` — redirección consciente del rol y de la demo
 
-Create `demo-padre@netia.app` (password `netiademo`) via a migration that:
-1. Inserts into `auth.users` using `supabase_auth_admin` — actually, since we cannot directly insert into `auth.users` from a migration safely, we will instead use a **one-time SQL block calling `auth.users` insert with encrypted password** (same approach used for the existing demo users — they exist, so the pattern works). If the cleaner path is needed, we use `supabase.auth.admin.createUser` from a temporary Edge Function call. **Preferred: SQL migration mirroring how the other demo accounts were created.**
-2. The `handle_new_user` trigger automatically creates `profiles`, `user_roles` (`parent`), and `player_stats` rows. We pass `raw_user_meta_data = {"role": "parent", "full_name": "Familia Demo"}`.
-3. Insert a `family_links` row linking `demo-padre` (parent_id) → `demo-jugador` (child_id), with `consent_given = true` and `consent_date = now()`. This unlocks RLS so the parent can read the child's stats, logs, badges, calendar, etc.
-4. Mark `profiles.onboarding_completed = true` for the parent so they skip onboarding.
+- Importar `useDemo` (ya está) y `useAuth` con `user` (no solo `isAuthenticated`).
+- Reemplazar el `useEffect` de redirección por uno que:
+  - Espere a que `isLoading` de `AuthContext` sea `false` antes de actuar.
+  - Si `isDemoMode` está activo, **no haga nada** (el `DemoContext` se encarga de navegar).
+  - Si está autenticado y no en demo, navegue al dashboard correspondiente al rol (`/dashboard` para player, `/parent/dashboard` para parent, `/club/dashboard` para coach/club_admin, `/admin/dashboard` para admin) en vez de siempre `/dashboard`.
 
-### B. Add Familia to `DEMO_ROLES` (`src/contexts/DemoContext.tsx`)
+Esto elimina la carrera: durante la transición de demo, LandingPage ya no fuerza una navegación intermedia.
 
-Add a 5th entry between `player` and `coach`:
-```
-{
-  role: 'parent',
-  email: 'demo-padre@netia.app',
-  password: 'netiademo',
-  dashboard: '/parent/dashboard',
-  label: 'Familia',
-  icon: Heart,           // or Users — pick one not already used
-  description: 'Seguí el bienestar, entrenamientos y apto médico de tu hijo/a',
-  gradient: 'from-pink-500/10 to-rose-500/10',
-  iconColor: 'text-pink-500',
-}
-```
+### 2. `src/contexts/DemoContext.tsx` — marcar demo ANTES de que auth cambie
 
-This automatically adds Familia to both the picker dialog (`DemoRolePickerDialog`) and the in-banner switcher (`DemoBanner`) since both iterate `DEMO_ROLES`.
+Como salvaguarda extra (por si en el futuro otra página agrega un useEffect parecido):
 
-### C. Fix the switching race condition (`src/contexts/DemoContext.tsx`)
+- En `demoLogin` y `switchDemoRole`, llamar `setState({ isDemoMode: true, demoRole: role })` **antes** de `signInWithPassword`. Si el login falla, revertir con `setState({ isDemoMode: false, demoRole: null })` en el `catch`.
+- Así, en el instante en que `onAuthStateChange` dispare y cualquier componente vea `isAuthenticated = true`, también verá `isDemoMode = true` y respetará la lógica de demo.
 
-Rewrite `switchDemoRole` to:
-1. **Navigate to a neutral, role-agnostic route first** (e.g. `/`) before signOut, so RouteGuard doesn't bounce while the swap happens. The landing page has no auth requirement.
-2. `signOut` → `signInWithPassword`.
-3. **Wait for the `AuthContext.user.role` to actually equal the target role** before navigating to the destination dashboard. Implement this via a small helper that polls `supabase.auth.getUser` + `user_roles` query (or, simpler: subscribe once to `onAuthStateChange` inside `switchDemoRole` and resolve when SIGNED_IN fires + role matches). Use a 3s timeout fallback.
-4. Then `navigate(account.dashboard)`.
+### 3. `src/components/demo/DemoRolePickerDialog.tsx` — cerrar el diálogo apenas arranca el login
 
-Also apply the same pattern to `demoLogin` (initial entry) for consistency — there, `AuthContext.user` may not be set yet when `navigate` runs, but `RouteGuard` will show the loader and resolve correctly. Lower priority.
+Hoy el diálogo se cierra dentro del `try` después de que `demoLogin` resuelve, lo que en mobile se siente colgado y mantiene el spinner visible varios segundos sobre un fondo que ya está navegando.
 
-Alternative simpler fix (acceptable): in `switchDemoRole`, wrap the swap in a "demo-switching" flag exposed via context, and have `RouteGuard` short-circuit (render the loader) while that flag is true. Pick whichever is less invasive — recommend the **navigate-to-`/` first** approach because it requires no RouteGuard change.
+- Cerrar el diálogo (`onOpenChange(false)`) inmediatamente después de setear `loadingRole`, antes de `await demoLogin(...)`.
+- Mostrar el estado "Abriendo demo..." con un `toast.loading` (sonner) y descartarlo en éxito o error con `toast.success` / `toast.error`.
+- Mantener `loadingRole` para deshabilitar más toques mientras el diálogo se anima cerrando.
 
-### D. Verify navigation menus already include parent items
+### 4. Verificación manual
 
-Confirmed already present:
-- `Sidebar.tsx` → `parentNav` (Panel, Hijo/a, Apto Médico) ✓
-- `MobileNav.tsx` → `parentNavItems` ✓
-- `Header.tsx` role-based routing ✓
+- Mobile (411×751): abrir el modal de demo, tocar **Jugador**, **Familia**, **Entrenador**, **Admin de Club** y **Administrador** uno por uno desde el landing. Cada uno debe cerrar el diálogo, mostrar el toast y aterrizar en el dashboard correcto sin rebote a `/dashboard` ni a `/login`.
+- Desktop: confirmar que sigue funcionando igual.
+- Banner de demo: alternar de rol entre `Familia` ↔ `Entrenador` ↔ `Admin` desde el dropdown del banner para confirmar que el fix de carrera no rompió `switchDemoRole`.
 
-No changes needed there.
+## Archivos a modificar
 
----
-
-## Files
-
-| Action | File |
-|--------|------|
-| Create | `supabase/migrations/<timestamp>_demo_parent_user.sql` — insert demo-padre user + family_link |
-| Modify | `src/contexts/DemoContext.tsx` — add `parent` to `DEMO_ROLES`; fix `switchDemoRole` race |
-
-## Verification steps after build
-
-1. From landing → demo picker → pick each of the 5 roles → land on the correct dashboard.
-2. From demo banner dropdown → switch player↔admin↔coach↔club_admin↔parent in any order → URL and UI update correctly every time, no redirect loops.
-3. As Familia: `/parent/dashboard` shows the linked demo player; `/parent/child` shows their stats; `/parent/medical` loads.
-4. Test on mobile viewport (411px) — dropdown closes cleanly and switch completes.
+| Acción | Archivo |
+|--------|---------|
+| Modificar | `src/pages/LandingPage.tsx` (redirección por rol + respetar `isDemoMode`) |
+| Modificar | `src/contexts/DemoContext.tsx` (set `isDemoMode` antes del login, revert on error) |
+| Modificar | `src/components/demo/DemoRolePickerDialog.tsx` (cerrar diálogo temprano + toasts) |

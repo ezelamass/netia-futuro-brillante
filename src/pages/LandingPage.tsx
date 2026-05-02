@@ -15,22 +15,32 @@ import LandingFooter from '@/components/landing/LandingFooter';
 import { DemoRolePickerDialog } from '@/components/demo/DemoRolePickerDialog';
 import { TourProvider, useTour } from '@/components/tour/TourProvider';
 
+const ROLE_DASHBOARD: Record<string, string> = {
+  player: '/dashboard',
+  parent: '/parent/dashboard',
+  coach: '/club/dashboard',
+  club_admin: '/club/dashboard',
+  admin: '/admin/dashboard',
+};
+
 function LandingContent() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const { isDemoMode } = useDemo();
   const { startTour, isActive: tourActive, stopTour } = useTour();
   const navigate = useNavigate();
   const [demoDialogOpen, setDemoDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !isDemoMode) {
-      // If the tour is active when an auth event fires (e.g. login in another
-      // tab), close it first so its overlay doesn't get orphaned in the DOM
-      // after this component unmounts.
+    // Wait for auth to settle so we don't redirect on a half-loaded state.
+    if (isLoading) return;
+    // Demo mode owns its own navigation in DemoContext — don't race it.
+    if (isDemoMode) return;
+    if (isAuthenticated && user) {
       if (tourActive) stopTour();
-      navigate('/dashboard');
+      const target = ROLE_DASHBOARD[user.role] ?? '/dashboard';
+      navigate(target, { replace: true });
     }
-  }, [isAuthenticated, isDemoMode, navigate, tourActive, stopTour]);
+  }, [isAuthenticated, isDemoMode, isLoading, user, navigate, tourActive, stopTour]);
 
   return (
     <>
