@@ -62,7 +62,7 @@ export function useRoster() {
 
         supabase
           .from('daily_logs')
-          .select('user_id, sleep_hours, hydration_liters, energy_level, pain_level, pain_location, log_date')
+          .select('user_id, sleep_hours, hydration_liters, energy_level, pain_level, pain_location, log_date, training_duration_min')
           .in('user_id', playerIds)
           .order('log_date', { ascending: false }),
 
