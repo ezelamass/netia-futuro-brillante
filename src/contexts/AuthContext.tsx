@@ -88,41 +88,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // 1. Initialize from existing session first
-    const initSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!mounted) return;
+    // The callback runs inside Supabase's auth lock; any awaited query that
+    // internally refreshes the token deadlocks here. Defer DB work with
+    // setTimeout(0) so it runs after the lock is released.
+    // https://supabase.com/docs/reference/javascript/auth-onauthstatechange
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      const supabaseUser = session?.user ?? null;
 
-        if (session?.user) {
-          const appUser = await buildUser(session.user);
+      if (!supabaseUser) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      setTimeout(async () => {
+        try {
+          const appUser = await buildUser(supabaseUser);
           if (mounted) setUser(appUser);
-        }
-      } catch (err) {
-        console.error('Failed to init session:', err);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    // 2. Subscribe to subsequent auth changes (login/logout while app is open)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!mounted) return;
-        if (session?.user) {
-          try {
-            const appUser = await buildUser(session.user);
-            if (mounted) setUser(appUser);
-          } catch (err) {
-            console.error('Failed to build user on auth change:', err);
-          }
-        } else {
+        } catch (err) {
+          console.error('Failed to build user:', err);
           if (mounted) setUser(null);
+        } finally {
+          if (mounted) setIsLoading(false);
         }
-      }
-    );
-
-    initSession();
+      }, 0);
+    });
 
     return () => {
       mounted = false;
