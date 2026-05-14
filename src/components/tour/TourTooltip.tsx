@@ -17,20 +17,24 @@ export function TourTooltip({
   step, spotlight, currentStep, totalSteps,
   onNext, onPrev, onSkip, isLast,
 }: TourTooltipProps) {
-  // Position tooltip relative to spotlight
-  const tooltipWidth = 340;
-  const tooltipHeight = 220; // estimate, used for clamp math only
   const gap = 16;
   const margin = 16;
+  const tooltipHeight = 220; // estimate, used for clamp math only
+
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  // On narrow phones the 340px design width would overflow, so collapse to
+  // the available space. Use the actual rendered width (not the design value)
+  // for the horizontal clamp below or the tooltip drifts past the right edge.
+  const designWidth = 340;
+  const tooltipWidth = Math.min(designWidth, viewportWidth - margin * 2);
 
   // All values are in VIEWPORT coordinates because the tour overlay is
   // rendered with `position: fixed` and we use viewport-relative spotlight
   // coords. No window.scrollY math anywhere here.
   let top = 0;
   let left = 0;
-
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
 
   switch (step.placement) {
     case 'bottom':
@@ -79,34 +83,34 @@ export function TourTooltip({
       initial={{ opacity: 0, scale: 0.95, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="absolute z-[9999] bg-white rounded-2xl shadow-2xl border p-5"
-      style={{ top, left, width: tooltipWidth, maxWidth: 'calc(100vw - 32px)' }}
+      className="absolute z-[9999] bg-white rounded-2xl shadow-2xl border p-4 sm:p-5"
+      style={{ top, left, width: tooltipWidth }}
       role="dialog"
       aria-live="polite"
       aria-label={`Paso ${currentStep + 1} de ${totalSteps}: ${step.title}`}
       translate="no"
     >
-      <h3 className="text-lg font-heading font-semibold text-foreground">
+      <h3 className="text-base sm:text-lg font-heading font-semibold text-foreground">
         {step.title}
       </h3>
       <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
         {step.description}
       </p>
 
-      <div className="flex items-center justify-between mt-4">
-        <span className="text-xs text-muted-foreground">
-          {currentStep + 1} de {totalSteps}
+      <div className="flex items-center justify-between gap-2 mt-4">
+        <span className="text-xs text-muted-foreground shrink-0">
+          {currentStep + 1} / {totalSteps}
         </span>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs h-8">
+        <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs h-10 px-3">
             Omitir
           </Button>
           {currentStep > 0 && (
-            <Button variant="outline" size="sm" onClick={onPrev} className="text-xs h-8">
+            <Button variant="outline" size="sm" onClick={onPrev} className="text-xs h-10 px-3">
               Anterior
             </Button>
           )}
-          <Button size="sm" onClick={onNext} className="text-xs h-8">
+          <Button size="sm" onClick={onNext} className="text-xs h-10 px-3">
             {isLast ? 'Probar Demo' : 'Siguiente'}
           </Button>
         </div>

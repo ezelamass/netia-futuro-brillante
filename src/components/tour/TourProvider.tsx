@@ -83,9 +83,28 @@ export function TourProvider({ children }: { children: ReactNode }) {
       let lastTop: number | null = null;
       let stableFrames = 0;
       let safetyCounter = 0;
+      let done = false;
       const SAFETY_LIMIT = 90; // ~1.5s @60fps fallback
 
+      const commit = () => {
+        if (done) return;
+        done = true;
+        const rect = el.getBoundingClientRect();
+        setSpotlight({
+          top: rect.top - PAD,
+          left: rect.left - PAD,
+          width: rect.width + PAD * 2,
+          height: rect.height + PAD * 2,
+        });
+      };
+
+      // Fallback for environments where requestAnimationFrame is throttled
+      // (background tabs, headless browsers): force a commit at 1.5s so the
+      // tour overlay still renders even if no rAF tick ever fires.
+      const fallback = window.setTimeout(commit, 1500);
+
       const tick = () => {
+        if (done) return;
         const rect = el.getBoundingClientRect();
         if (lastTop !== null && Math.abs(rect.top - lastTop) < 0.5) {
           stableFrames += 1;
@@ -96,12 +115,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
         safetyCounter += 1;
 
         if (stableFrames >= 3 || safetyCounter >= SAFETY_LIMIT) {
-          setSpotlight({
-            top: rect.top - PAD,
-            left: rect.left - PAD,
-            width: rect.width + PAD * 2,
-            height: rect.height + PAD * 2,
-          });
+          window.clearTimeout(fallback);
+          commit();
           return;
         }
         requestAnimationFrame(tick);
