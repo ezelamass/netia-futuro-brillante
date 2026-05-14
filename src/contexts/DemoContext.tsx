@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Users, Building2, Shield, Heart, type LucideIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, setDemoMode } from '@/integrations/supabase/client';
 import type { UserRole } from '@/contexts/AuthContext';
 
 /**
@@ -175,6 +175,9 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         setIsSwitching(true);
+        // Activate the mock supabase client BEFORE signing in so AuthContext's
+        // buildUser() reads from the mock dataset (no real DB writes during demo).
+        setDemoMode(true);
         // Mark demo mode BEFORE auth changes so any LandingPage/RouteGuard
         // useEffect that watches isAuthenticated also sees isDemoMode=true
         // and won't redirect to the wrong dashboard mid-flow.
@@ -192,6 +195,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       } catch (err) {
         console.error('[demo] login failed:', err);
         // Revert demo flag if login failed.
+        setDemoMode(false);
         setState({ isDemoMode: false, demoRole: null });
         return { ok: false, error: friendlyAuthError(err) };
       } finally {
@@ -210,6 +214,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       const previousRole = state.demoRole;
       try {
         setIsSwitching(true);
+        setDemoMode(true);
 
         // 1) Park on a route with no role requirements BEFORE signing out, so
         //    RouteGuard on the current page (e.g. /admin/dashboard) does not
@@ -252,6 +257,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       await supabase.auth.signOut();
     } catch { /* ignore */ }
     setState({ isDemoMode: false, demoRole: null });
+    setDemoMode(false);
     navigate('/');
   }, [navigate]);
 

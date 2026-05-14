@@ -24,13 +24,13 @@ export const useDemoGuard = () => {
   const { isDemoMode } = useDemo();
 
   /**
-   * Returns `true` if the action should be blocked (and shows a toast).
-   * Returns `false` if the caller should proceed.
+   * Demo mode now uses an in-memory mock supabase client (writes never reach
+   * the real DB), so writes are safe to run. We keep this hook for backwards
+   * compatibility but it always returns false — the mock layer handles
+   * everything transparently.
    */
-  const blockIfDemo = (message?: string): boolean => {
-    if (!isDemoMode) return false;
-    toast.info(message || DEFAULT_MESSAGE);
-    return true;
+  const blockIfDemo = (_message?: string): boolean => {
+    return false;
   };
 
   /** Legacy wrapper kept for sync callbacks. */
